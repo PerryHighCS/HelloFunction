@@ -1,0 +1,5 @@
+#Lambda Function Project Metadata
+#Wed Apr 19 18:57:38 MST 2017
+lastDeploymentFunctionName=HelloFunction
+lastDeploymentBucketName=hello-lambda-1334
+lastDeploymentEndpoint=https\://lambda.us-west-2.amazonaws.com/
