@@ -1,6 +1,7 @@
 package myCodeRun;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +21,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -84,7 +86,7 @@ public class Hello implements RequestStreamHandler {
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean runIt(Iterable<? extends JavaFileObject> files, String mainClass) {
-			
+		
 		// Compile the files using the JavaCompiler
 		try {
 			SpecialClassLoader classLoader = compile(files);
@@ -98,15 +100,18 @@ public class Hello implements RequestStreamHandler {
 			System.gc();
 			
 		} catch (ClassNotFoundException | NullPointerException e) {
+			System.err.println(e.toString());
 			System.out.println("Main class: " + mainClass + " not found in source files, could not execute.");
 			return false;
 		} catch (NoSuchMethodException | IllegalArgumentException e) {
+			System.err.println(e.toString());
 			System.out.println("Main class: " + mainClass + " does not contain a \"main\" method, or main method has incorrect parameter list.");
 			return false;
 		} catch (IllegalAccessException e) {
+			System.err.println(e.toString());
 			System.out.println("Main class: " + mainClass + " \"main\" method is inaccessable.  Is it \"public\"?");
 			return false;
-		} catch ( InvocationTargetException e) {
+		} catch (InvocationTargetException e) {
 			Throwable cause = e.getCause();
 			if (cause == null) {
 				cause = e;
@@ -114,6 +119,7 @@ public class Hello implements RequestStreamHandler {
 			
 			StackTraceElement[] frames = cause.getStackTrace();
 			
+			System.err.println(cause.toString());
 			System.out.println(cause.toString());
 			System.out.println("Call Stack:");
 			
@@ -128,10 +134,13 @@ public class Hello implements RequestStreamHandler {
 				}
 			}
 			return false;
-		} catch (SecurityException |ExceptionInInitializerError e) {
+		} catch (OutOfMemoryError | SecurityException | ExceptionInInitializerError e) {
+			System.gc();
+			
 			// Display the exception and call stack
 			StackTraceElement[] frames = e.getStackTrace();
 			
+			System.err.println(e.toString());
 			System.out.println(e.toString());
 			System.out.println("Call Stack:");
 			
@@ -178,7 +187,6 @@ public class Hello implements RequestStreamHandler {
 		
 	@Override
 	public void handleRequest(InputStream input, OutputStream output, Context context) throws IOException {
-
 		ObjectMapper mapper = new ObjectMapper();
 		LambdaAPIRequest apiReq = mapper.readValue(input, LambdaAPIRequest.class);
 		
@@ -196,11 +204,15 @@ public class Hello implements RequestStreamHandler {
 			CompileRequest cReq = req.getCompileRequest();
 			if (cReq != null) {
 				if (cReq.getVersion() > REQUEST_HANDLER_VERSION) {
-					result += "Request version (" + req.getVersion() + ") is > (" + REQUEST_HANDLER_VERSION + ") output may be incorrect.";
+					String msg = "Request version (" + req.getVersion() + ") is > (" + REQUEST_HANDLER_VERSION + ") output may be incorrect.";
+					result += msg;
+					System.err.println(msg);
 				}
 				
 				if (cReq.getVersion() > COMPILE_REQUEST_HANDLER_VERSION) {
-					result += "Compile Request version (" + cReq.getVersion() + ") is > (" + COMPILE_REQUEST_HANDLER_VERSION + ") output may be incorrect.";
+					String msg = "Compile Request version (" + cReq.getVersion() + ") is > (" + COMPILE_REQUEST_HANDLER_VERSION + ") output may be incorrect.";
+					result += msg;
+					System.err.println(msg);
 				}
 				
 				// Construct in-memory java source files from the request dynamic code
@@ -226,6 +238,19 @@ public class Hello implements RequestStreamHandler {
 			success = false;
 		}
 		
+		Runtime runtime = Runtime.getRuntime();
+		StringBuilder sb = new StringBuilder();
+		NumberFormat format = NumberFormat.getInstance();
+		long maxMemory = runtime.maxMemory();
+		long allocatedMemory = runtime.totalMemory();
+		
+		long freeMemory = runtime.freeMemory();
+		sb.append("free memory: " + format.format(freeMemory / 1024) + "\t");
+		sb.append("allocated memory: " + format.format(allocatedMemory / 1024) + "\t");
+		sb.append("max memory: " + format.format(maxMemory / 1024) + "\t");
+		sb.append("total free memory: " + format.format((freeMemory + (maxMemory - allocatedMemory)) / 1024) + "\t");
+		System.err.println(sb.toString());
+
 		CompileResponse resp = new CompileResponse();
 		
 		resp.setResult(result);

@@ -2,7 +2,6 @@ package example;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Scanner;
 
 import org.junit.Test;
 
@@ -28,7 +27,7 @@ public class HelloTest {
         
         try {
         	for (int i = 0; i < 10; i++) {
-            	InputStream input = this.getClass().getClassLoader().getResourceAsStream("mergeSortLocal.json");
+            	InputStream input = this.getClass().getClassLoader().getResourceAsStream("mergeSortBigLocal.json");
             	handler.handleRequest(input, System.out, createContext());
             	input.close();
         	}
