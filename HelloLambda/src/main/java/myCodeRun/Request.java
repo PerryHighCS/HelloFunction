@@ -6,6 +6,7 @@ public class Request {
 	private CompileRequest compRequest;
 	private String testType;
 	private int version;
+	private TestRequest test;
 	
 	public Request() {};
 	
@@ -27,6 +28,16 @@ public class Request {
 	@JsonProperty("test-type")
 	public String getTestType() {
 		return this.testType;
+	}
+
+	@JsonProperty("test")
+	public void setTestRequest(TestRequest tReq) {
+		this.test = tReq;
+	}
+	
+	@JsonProperty("test")
+	public TestRequest getTestRequest() {
+		return this.test;
 	}
 
 	@JsonProperty("version")

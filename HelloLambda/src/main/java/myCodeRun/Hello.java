@@ -1,47 +1,29 @@
 package myCodeRun;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Stack;
 
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 
 import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
-import org.junit.runner.JUnitCore;
-import org.junit.runner.Result;
-import org.junit.runner.notification.RunListener;
 
-@SuppressWarnings("unused")
 public class Hello implements RequestStreamHandler {
 	public static final int REQUEST_HANDLER_VERSION = 1;
 	public static final int COMPILE_REQUEST_HANDLER_VERSION = 1;
@@ -68,13 +50,15 @@ public class Hello implements RequestStreamHandler {
 		SpecialJavaFileManager fileManager = new SpecialJavaFileManager(stdfileManager, classLoader);           
 
 		//specify options for compiler
-		// Iterable<String> options = Arrays.asList(null);
-		Iterable<String> options = Arrays.asList("-source", "1.8");
+		List<String> options = new ArrayList<String>();
+		options.addAll(Arrays.asList("-classpath",".:"+System.getProperty("java.class.path")+":/var/task/lib/junit-4.12.jar"));
+		options.addAll(Arrays.asList("-1.8"));
+		
 		Writer out = new PrintWriter(System.out);
 		JavaCompiler.CompilationTask task = compiler.getTask(out, fileManager,
 				diag, options, null,
 				files);
-
+		
 		Boolean result = task.call();
 		if (result == true)
 		{
@@ -129,16 +113,8 @@ public class Hello implements RequestStreamHandler {
 			System.out.println("Call Stack:");
 			
 			// Show the call stack for the exception... but do not include any of stack containing this method or below
-			boolean reachedRunIt = false;
-			for (int i = 0; i < frames.length && !reachedRunIt; i++) {
-				if (frames[i].getMethodName() != "runIt") {
-					System.out.print("\t");
-					System.out.println(frames[i].toString());
-				}
-				else {
-					reachedRunIt = true;
-				}
-			}
+			System.out.println(stackTrace(frames, "myCodeRun.runIt"));
+			
 			return false;
 		} catch (OutOfMemoryError | SecurityException | ExceptionInInitializerError e) {
 			// If there is an out of memory, the gc should have run, but call it again Sam
@@ -152,16 +128,8 @@ public class Hello implements RequestStreamHandler {
 			System.out.println("Call Stack:");
 			
 			// Show only the part of the call stack above this method
-			boolean reachedRunIt = false;
-			for (int i = 0; i < frames.length && !reachedRunIt; i++) {
-				if (frames[i].getMethodName() != "runIt") {
-					System.out.print("\t");
-					System.out.println(frames[i].toString());
-				}
-				else {
-					reachedRunIt = true;
-				}
-			}
+			System.out.println(stackTrace(frames, "myCodeRun.runIt"));
+			
 			return false;
 		}
 
@@ -192,38 +160,41 @@ public class Hello implements RequestStreamHandler {
 		PrintStream old = System.out;
 		System.setOut(ps);
 		
-		JUnitCore junit = new JUnitCore();
-		ResultInnumerator allResults = new ResultInnumerator(baos, "testIt");
+		//JUnitCore junit = new JUnitCore();
+		MyJUnit junit = new MyJUnit();
+		ResultInnumerator allResults = new ResultInnumerator(baos, "myCodeRun.testIt");
 		junit.addListener(allResults);
 		
 		// Have JUnit run the test cases specified
-		for (String testName : tests) {
+		try {
 			
-			try {
-				@SuppressWarnings("rawtypes")
-				Class test = classLoader.findClass(testName);
-				Result result = junit.run(test);
-				
-				TestResult tr = allResults.retrieveResults();
-				
-				score.addResults(tr);
-				
-			} catch (ClassNotFoundException | NullPointerException e) {
-				// Log the error
-				System.err.println(e.toString());
+			List<Class<?>> classes = new ArrayList<Class<?>>();
 
-				// Add a failed test to the results
-				score.addFailedTest("Could not run test " + testName + ", not found.", null);
-			} catch (OutOfMemoryError e) {
-				// If there is an out of memory, the gc should have run, but call it again Sam
-				System.gc();
-								
-				// Log the error
-				System.err.println(e.toString());
-				
-				// Add a failed test to the results
-				score.addFailedTest(e.toString(), baos.toString() + stackTrace(e.getStackTrace(), "testIt"));
+			for (String test : tests) {
+				classes.add(classLoader.findClass(test));
 			}
+			//Result result = junit.run(classes.toArray(new Class<?>[0]));
+			junit.run(classes.toArray(new Class<?>[0]));
+			
+			TestResult tr = allResults.retrieveResults();
+			
+			score.addResults(tr);
+			
+		} catch (ClassNotFoundException | NullPointerException e) {
+			// Log the error
+			System.err.println(e.toString());
+
+			// Add a failed test to the results
+			score.addFailedTest("Could not run test, not found.", null);
+		} catch (OutOfMemoryError e) {
+			// If there is an out of memory, the gc should have run, but call it again Sam
+			System.gc();
+							
+			// Log the error
+			System.err.println(e.toString());
+			
+			// Add a failed test to the results
+			score.addFailedTest(e.toString(), baos.toString() + stackTrace(e.getStackTrace(), "myCodeRun.testIt"));
 		}
 
 		// Clear the output and restore the original
@@ -238,7 +209,7 @@ public class Hello implements RequestStreamHandler {
 
 		// Add the stack frames to the trace until the method "stackBottom" is reached
 		for (StackTraceElement frame : frames) {
-			if (frame.getMethodName() != stackBottom) {
+			if (frame.getClassName() + "." + frame.getMethodName() != stackBottom) {
 				trace += "\t";
 				trace += frame.toString();
 				trace += "\n";
@@ -284,8 +255,9 @@ public class Hello implements RequestStreamHandler {
 
 		TestResult testResults = null;
 		String result = "";
-		boolean success;		
+		boolean success;	
 		
+	
 		// Create a stream to hold system output
 		ByteArrayOutputStream boas = new ByteArrayOutputStream();
 		PrintStream ps = new PrintStream(boas);
@@ -310,16 +282,18 @@ public class Hello implements RequestStreamHandler {
 				// Construct in-memory java source files from the request dynamic code
 				final Iterable<? extends JavaFileObject> files = createSourceFileObjects(cReq);
 			
-				if (req.getTestType() == "run") {
+				if (req.getTestType().equalsIgnoreCase("run")) {
 					// Compile and run the source files
 					success = runIt(files, cReq.getMainClass());
 				}
-				else if (req.getTestType() == "test") {
-					TestRequest tReq = cReq.getTestRequest();
+				else if (req.getTestType().equalsIgnoreCase("junit")) {
+					TestRequest tReq = req.getTestRequest();
 					testResults = testIt(files, tReq.getTestClasses());
 					success = testResults.getSuccess();
 				}
 				else {
+					System.err.println("Nothing to do");
+					result += "Nothing to do.";
 					success = false;
 				}
 					
@@ -365,5 +339,4 @@ public class Hello implements RequestStreamHandler {
 	public static void main (String args[]) {
 		
 	}
-
 }
