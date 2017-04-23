@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.regex.Matcher;
 
 public class CompileRequest {
@@ -42,6 +45,7 @@ public class CompileRequest {
 	private int version = 1;
 	private String mainClass;
 	private List<FileClass> sourceFiles;
+	private TestRequest test;
 	
 	public void setVersion(int version) {
 		this.version = version;
@@ -65,6 +69,16 @@ public class CompileRequest {
 	
 	public List<FileClass> getSourceFiles() {
 		return sourceFiles;
+	}
+	
+	@JsonProperty("test")
+	public void setTestRequest(TestRequest tReq) {
+		this.test = tReq;
+	}
+	
+	@JsonProperty("test")
+	public TestRequest getTestRequest() {
+		return this.test;
 	}
 	
 	public void addFile(String name, String contents, boolean isMain) {
