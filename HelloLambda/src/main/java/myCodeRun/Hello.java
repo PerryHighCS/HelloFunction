@@ -23,6 +23,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 
 import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
+import org.junit.runner.JUnitCore;
 
 public class Hello implements RequestStreamHandler {
 	public static final int REQUEST_HANDLER_VERSION = 1;
@@ -37,7 +38,7 @@ public class Hello implements RequestStreamHandler {
 	 */
 	public SpecialClassLoader compile(Iterable<? extends JavaFileObject> files) throws ClassNotFoundException
 	{
-		final SpecialClassLoader classLoader = new SpecialClassLoader();   
+		final SpecialClassLoader classLoader = new SpecialClassLoader(this.getClass().getClassLoader());   
 		//get system compiler:
 		final JavaCompiler compiler = new EclipseCompiler();
 
@@ -113,7 +114,7 @@ public class Hello implements RequestStreamHandler {
 			System.out.println("Call Stack:");
 			
 			// Show the call stack for the exception... but do not include any of stack containing this method or below
-			System.out.println(stackTrace(frames, "myCodeRun.runIt"));
+			System.out.println(stackTrace(frames, "myCodeRun.Hello.runIt"));
 			
 			return false;
 		} catch (OutOfMemoryError | SecurityException | ExceptionInInitializerError e) {
@@ -128,7 +129,7 @@ public class Hello implements RequestStreamHandler {
 			System.out.println("Call Stack:");
 			
 			// Show only the part of the call stack above this method
-			System.out.println(stackTrace(frames, "myCodeRun.runIt"));
+			System.out.println(stackTrace(frames, "myCodeRun.Hello.runIt"));
 			
 			return false;
 		}
@@ -160,9 +161,9 @@ public class Hello implements RequestStreamHandler {
 		PrintStream old = System.out;
 		System.setOut(ps);
 		
-		//JUnitCore junit = new JUnitCore();
-		MyJUnit junit = new MyJUnit();
-		ResultInnumerator allResults = new ResultInnumerator(baos, "myCodeRun.testIt");
+		JUnitCore junit = new JUnitCore();
+		//MyJUnit junit = new MyJUnit();
+		ResultInnumerator allResults = new ResultInnumerator(baos, "myCodeRun.Hello.testIt");
 		junit.addListener(allResults);
 		
 		// Have JUnit run the test cases specified
@@ -194,7 +195,7 @@ public class Hello implements RequestStreamHandler {
 			System.err.println(e.toString());
 			
 			// Add a failed test to the results
-			score.addFailedTest(e.toString(), baos.toString() + stackTrace(e.getStackTrace(), "myCodeRun.testIt"));
+			score.addFailedTest(e.toString(), baos.toString() + stackTrace(e.getStackTrace(), "myCodeRun.Hello.testIt"));
 		}
 
 		// Clear the output and restore the original
@@ -209,7 +210,7 @@ public class Hello implements RequestStreamHandler {
 
 		// Add the stack frames to the trace until the method "stackBottom" is reached
 		for (StackTraceElement frame : frames) {
-			if (frame.getClassName() + "." + frame.getMethodName() != stackBottom) {
+			if (!(frame.getClassName() + "." + frame.getMethodName()).equals(stackBottom)) {
 				trace += "\t";
 				trace += frame.toString();
 				trace += "\n";

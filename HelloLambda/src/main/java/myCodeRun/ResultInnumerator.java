@@ -67,11 +67,16 @@ public class ResultInnumerator extends RunListener {
 	public void testFailure(Failure failure) throws Exception {
 		super.testFailure(failure);
 		
-		String description = "Test Failed.\n";
-		description += failure.getMessage();
+		String description = "Test " + failure.getDescription() + " failed.";
+		
+		Throwable realException = failure.getException();
+		if (realException.getCause() != null) {
+			realException = realException.getCause();
+		}
 		
 		String body = output.toString();
-		body += stackTrace(failure.getException().getStackTrace());
+		body += realException.getMessage();
+		body += stackTrace(realException.getStackTrace());
 		
 		testResults.addTest(description, body, false);
 		testFailed = true;
@@ -109,7 +114,7 @@ public class ResultInnumerator extends RunListener {
 
 		// Add the stack frames to the trace until the method "stackBottom" is reached
 		for (StackTraceElement frame : frames) {
-			if (frame.getClassName() + "." + frame.getMethodName() != stackBottom) {
+			if (!(frame.getClassName() + "." + frame.getMethodName()).equals(stackBottom)) {
 				trace += "\t";
 				trace += frame.toString();
 				trace += "\n";
