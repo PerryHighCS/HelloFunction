@@ -16,7 +16,7 @@ class SpecialClassLoader extends ClassLoader {
 				return super.findClass(name);           
 			}       
 		}       
-		return defineClass(name, mbc.getBytes(), 0, mbc.getBytes().length);   
+		return defineClass(name, mbc.getBytes(), 0, mbc.getBytes().length); 
 	}
 
 	public void addClass(String name, MemoryByteCode mbc) { 

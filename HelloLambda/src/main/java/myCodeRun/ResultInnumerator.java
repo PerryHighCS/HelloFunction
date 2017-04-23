@@ -35,7 +35,7 @@ public class ResultInnumerator extends RunListener {
 	@Override
 	public void testStarted(Description description) throws Exception {
 		super.testStarted(description);
-		
+
 		testFailed = false;
 		output.reset();
 	}
@@ -104,13 +104,12 @@ public class ResultInnumerator extends RunListener {
 		return testResults;
 	}
 
-
 	private String stackTrace(StackTraceElement[] frames) {
 		String trace = "";
 
 		// Add the stack frames to the trace until the method "stackBottom" is reached
 		for (StackTraceElement frame : frames) {
-			if (frame.getMethodName() != stackBottom) {
+			if (frame.getClassName() + "." + frame.getMethodName() != stackBottom) {
 				trace += "\t";
 				trace += frame.toString();
 				trace += "\n";

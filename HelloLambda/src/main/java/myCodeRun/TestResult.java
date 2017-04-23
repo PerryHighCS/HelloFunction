@@ -7,9 +7,42 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TestResult {
 	public static class CaseResult {
-		String description;
-		String body;
-		boolean passed;
+		public String description;
+		public String body;
+		public boolean passed;
+		
+		public CaseResult() {}
+		
+		@JsonProperty("body")
+		public String getBody() {
+			return body;
+		}
+
+		@JsonProperty("body")
+		public void setBody(String body) {
+			this.body = body;
+		}
+
+		@JsonProperty("passed")
+		public boolean isPassed() {
+			return passed;
+		}
+
+		@JsonProperty("passed")
+		public void setPassed(boolean passed) {
+			this.passed = passed;
+		}
+
+		@JsonProperty("description")
+		public String getDescription() {
+			return description;
+		}
+
+		@JsonProperty("description")
+		public void setDescription(String description) {
+			this.description = description;
+		}
+		
 	}
 	
 	private int numTestsRun;
@@ -43,6 +76,10 @@ public class TestResult {
 
 	@JsonProperty("score")
 	public double getScore() {
+		if (numTestsRun == 0) {
+			return 0;
+		}
+		
 		return numPassed / numTestsRun;
 	}
 
@@ -94,5 +131,9 @@ public class TestResult {
 
 	public void addResults(TestResult other) {
 		results.addAll(other.results);
+		
+		this.numPassed += other.numPassed;
+		this.numFailed += other.numFailed;
+		this.numTestsRun += other.numTestsRun;
 	}
 }
