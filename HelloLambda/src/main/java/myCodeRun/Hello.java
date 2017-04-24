@@ -1,3 +1,5 @@
+//TODO: Add custom securitymanager
+
 package myCodeRun;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -5,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,6 +15,9 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +30,10 @@ import javax.tools.StandardJavaFileManager;
 
 import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
 import org.junit.runner.JUnitCore;
+
+import jnr.posix.POSIX;
+import jnr.posix.POSIXFactory;
+
 
 public class Hello implements RequestStreamHandler {
 	public static final int REQUEST_HANDLER_VERSION = 1;
@@ -38,7 +48,15 @@ public class Hello implements RequestStreamHandler {
 	 */
 	public SpecialClassLoader compile(Iterable<? extends JavaFileObject> files) throws ClassNotFoundException
 	{
-		final SpecialClassLoader classLoader = new SpecialClassLoader(this.getClass().getClassLoader());   
+		URL[] urls = null;
+		try {
+			urls = new URL[] { new URL("file:///var/task/lib/junit-4.12.jar") };
+		} catch (MalformedURLException e) {
+			System.err.println(e);
+		}
+		
+		final URLClassLoader urlcl = new URLClassLoader(urls, this.getClass().getClassLoader());
+		final SpecialClassLoader classLoader = new SpecialClassLoader(urlcl);   
 		//get system compiler:
 		final JavaCompiler compiler = new EclipseCompiler();
 
@@ -56,9 +74,7 @@ public class Hello implements RequestStreamHandler {
 		options.addAll(Arrays.asList("-1.8"));
 		
 		Writer out = new PrintWriter(System.out);
-		JavaCompiler.CompilationTask task = compiler.getTask(out, fileManager,
-				diag, options, null,
-				files);
+		JavaCompiler.CompilationTask task = compiler.getTask(out, fileManager, diag, options, null, files);
 		
 		Boolean result = task.call();
 		if (result == true)
@@ -75,13 +91,12 @@ public class Hello implements RequestStreamHandler {
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public boolean runIt(Iterable<? extends JavaFileObject> files, String mainClass) {
-		
 		// Compile the files using the JavaCompiler
 		try {
 			SpecialClassLoader classLoader = compile(files);
 						
 			Class compiledClass = classLoader.findClass(mainClass);
-			
+		
 			// Call main method of compiled class by reflection
 			compiledClass.getMethod("main",String[].class).invoke(null, new Object[]{null}); 
 			compiledClass = null;
@@ -162,8 +177,7 @@ public class Hello implements RequestStreamHandler {
 		System.setOut(ps);
 		
 		JUnitCore junit = new JUnitCore();
-		//MyJUnit junit = new MyJUnit();
-		ResultInnumerator allResults = new ResultInnumerator(baos, "myCodeRun.Hello.testIt");
+		ResultInnumerator allResults = new ResultInnumerator(baos);
 		junit.addListener(allResults);
 		
 		// Have JUnit run the test cases specified
@@ -172,8 +186,9 @@ public class Hello implements RequestStreamHandler {
 			List<Class<?>> classes = new ArrayList<Class<?>>();
 
 			for (String test : tests) {
-				classes.add(classLoader.findClass(test));
+				classes.add(classLoader.loadClass(test));
 			}
+			
 			//Result result = junit.run(classes.toArray(new Class<?>[0]));
 			junit.run(classes.toArray(new Class<?>[0]));
 			
@@ -252,19 +267,29 @@ public class Hello implements RequestStreamHandler {
 		ObjectMapper mapper = new ObjectMapper();
 		LambdaAPIRequest apiReq = mapper.readValue(input, LambdaAPIRequest.class);
 		
+		//System.err.println(System.getProperty("user.dir"));
 		Request req = apiReq.getReqBody();
 
 		TestResult testResults = null;
 		String result = "";
 		boolean success;	
 		
-	
 		// Create a stream to hold system output
 		ByteArrayOutputStream boas = new ByteArrayOutputStream();
 		PrintStream ps = new PrintStream(boas);
 		PrintStream old = System.out;
 		System.setOut(ps);
 		
+		POSIX posix = POSIXFactory.getJavaPOSIX();
+		String workingDir = "/tmp/" + context.getAwsRequestId();
+		String startDir = new File(".").getCanonicalPath();
+
+		// Create and move to a working directory
+		posix.mkdir(workingDir, 700);
+		//posix.chdir(workingDir);
+		System.setProperty("user.dir", new File(workingDir).getAbsoluteFile().getAbsolutePath());
+
+		posix.chdir(workingDir);
 		if (req != null) {
 			CompileRequest cReq = req.getCompileRequest();
 			if (cReq != null) {
@@ -279,7 +304,7 @@ public class Hello implements RequestStreamHandler {
 					result += msg;
 					System.err.println(msg);
 				}
-				
+						
 				// Construct in-memory java source files from the request dynamic code
 				final Iterable<? extends JavaFileObject> files = createSourceFileObjects(cReq);
 			
@@ -312,6 +337,13 @@ public class Hello implements RequestStreamHandler {
 			result = "Missing Request";
 			success = false;
 		}
+
+		posix.chdir(startDir);
+		posix.mkdir(workingDir + "/t", 700);
+		// Remove the working directory if created
+		posix.rmdir(workingDir);
+		// Move back to the starting dir
+		System.setProperty("user.dir", startDir);
 		
 		Runtime runtime = Runtime.getRuntime();
 		StringBuilder sb = new StringBuilder();
@@ -335,6 +367,12 @@ public class Hello implements RequestStreamHandler {
 		resp.setVersion(RESPONDER_VERSION);
 		
 		mapper.writeValue(output, resp);
+	}
+	
+	public Hello() {
+		POSIX posix = POSIXFactory.getJavaPOSIX();
+		String workingDir = "/tmp";
+		posix.chdir(workingDir);
 	}
 	
 	public static void main (String args[]) {

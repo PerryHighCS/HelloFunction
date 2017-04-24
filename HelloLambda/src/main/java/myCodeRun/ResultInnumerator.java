@@ -10,12 +10,10 @@ import org.junit.runner.notification.RunListener;
 public class ResultInnumerator extends RunListener {
 	private TestResult testResults;
 	private ByteArrayOutputStream output;
-	private String stackBottom;
 	private boolean testFailed = false;
 
-	public ResultInnumerator(ByteArrayOutputStream baos, String stackBottom) {
+	public ResultInnumerator(ByteArrayOutputStream baos) {
 		this.output = baos;
-		this.stackBottom = stackBottom;
 		this.testResults = new TestResult();
 	}
 
@@ -53,7 +51,8 @@ public class ResultInnumerator extends RunListener {
 		description += failure.getMessage();
 		
 		String body = output.toString();
-		body += stackTrace(failure.getException().getStackTrace());
+		body += stackTrace(failure.getException().getStackTrace(),
+				failure.getDescription().getClassName() + "." + failure.getDescription().getMethodName());
 		
 		testResults.addTest(description, body, false);
 		testFailed = true;
@@ -67,7 +66,7 @@ public class ResultInnumerator extends RunListener {
 	public void testFailure(Failure failure) throws Exception {
 		super.testFailure(failure);
 		
-		String description = "Test " + failure.getDescription() + " failed.";
+		String description = failure.getDescription().toString();
 		
 		Throwable realException = failure.getException();
 		if (realException.getCause() != null) {
@@ -76,7 +75,10 @@ public class ResultInnumerator extends RunListener {
 		
 		String body = output.toString();
 		body += realException.getMessage();
-		body += stackTrace(realException.getStackTrace());
+		body += "\n-----\n";
+		body += "Call Stack:\n";
+		body += stackTrace(realException.getStackTrace(), 
+				failure.getDescription().getClassName() + "." + failure.getDescription().getMethodName());
 		
 		testResults.addTest(description, body, false);
 		testFailed = true;
@@ -109,17 +111,16 @@ public class ResultInnumerator extends RunListener {
 		return testResults;
 	}
 
-	private String stackTrace(StackTraceElement[] frames) {
+	private String stackTrace(StackTraceElement[] frames, String stackBottom) {
 		String trace = "";
 
 		// Add the stack frames to the trace until the method "stackBottom" is reached
 		for (StackTraceElement frame : frames) {
-			if (!(frame.getClassName() + "." + frame.getMethodName()).equals(stackBottom)) {
-				trace += "\t";
-				trace += frame.toString();
-				trace += "\n";
-			}
-			else {
+			trace += "\t";
+			trace += frame.toString();
+			trace += "\n";
+			
+			if ((frame.getClassName() + "." + frame.getMethodName()).equals(stackBottom)) {
 				break;
 			}
 		}

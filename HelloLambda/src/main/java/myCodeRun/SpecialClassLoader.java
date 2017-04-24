@@ -1,14 +1,15 @@
 package myCodeRun;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 class SpecialClassLoader extends ClassLoader {   
-	private Map<String,MemoryByteCode> m = new WeakHashMap<String, MemoryByteCode>();
+	private Map<String,MemoryByteCode> m = new HashMap<String, MemoryByteCode>();
 	private ClassLoader parent;
 	
 	public SpecialClassLoader(ClassLoader parent) {
 		this.parent = parent;
+		//System.err.println("new loader");
 	}
 	@Override
 	protected Class<?> findClass(String name) throws ClassNotFoundException {
@@ -24,8 +25,15 @@ class SpecialClassLoader extends ClassLoader {
 			return defineClass(name, mbc.getBytes(), 0, mbc.getBytes().length);
 		}
 		catch (ClassNotFoundException e) {
+			//System.err.println("Could not find: " + name);
 			if (this.parent != null) {
-				return parent.loadClass(name);
+				try {
+					return parent.loadClass(name);
+				}
+				catch (ClassNotFoundException e1) {
+					//System.err.println("Really couldn't find " + name);
+					throw e1;
+				}
 			}
 			else {
 				throw e;
@@ -34,6 +42,7 @@ class SpecialClassLoader extends ClassLoader {
 	}
 
 	public void addClass(String name, MemoryByteCode mbc) { 
+		//System.err.println("Added class: " + name);
 		//System.out.println("Added class:" + name);
 		m.put(name, mbc);   
 	}

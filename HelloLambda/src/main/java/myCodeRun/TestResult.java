@@ -3,6 +3,7 @@ package myCodeRun;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TestResult {
@@ -80,7 +81,7 @@ public class TestResult {
 			return 0;
 		}
 		
-		return numPassed / numTestsRun;
+		return (double)numPassed / numTestsRun;
 	}
 
 	@JsonProperty("success")
