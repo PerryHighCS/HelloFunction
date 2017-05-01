@@ -3,11 +3,11 @@ package myCodeRun;
 import java.util.HashMap;
 import java.util.Map;
 
-class SpecialClassLoader extends ClassLoader {   
+class FromMemoryClassLoader extends ClassLoader {   
 	private Map<String,MemoryByteCode> m = new HashMap<String, MemoryByteCode>();
 	private ClassLoader parent;
 	
-	public SpecialClassLoader(ClassLoader parent) {
+	public FromMemoryClassLoader(ClassLoader parent) {
 		this.parent = parent;
 		//System.err.println("new loader");
 	}

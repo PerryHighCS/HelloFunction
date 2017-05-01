@@ -7,6 +7,7 @@ public class Request {
 	private String testType;
 	private int version;
 	private TestRequest test;
+	private DataRequest data;
 	
 	public Request() {};
 	
@@ -48,5 +49,15 @@ public class Request {
 	@JsonProperty("version")
 	public void setVersion(int version) {
 		this.version = version;
+	}
+
+	@JsonProperty("data")
+	public DataRequest getData() {
+		return data;
+	}
+
+	@JsonProperty("data")
+	public void setData(DataRequest data) {
+		this.data = data;
 	}
 }

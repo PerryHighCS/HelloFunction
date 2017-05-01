@@ -5,8 +5,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.regex.Matcher;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CompileRequest {
 	public static class FileClass {
 		private String name;
@@ -69,7 +72,7 @@ public class CompileRequest {
 	}
 	
 	
-	public void addFile(String name, String contents, boolean isMain) {
+	public void addSourceFile(String name, String contents, boolean isMain) {
 		if (sourceFiles == null) {
 			sourceFiles = new ArrayList<FileClass>();
 		}
@@ -97,6 +100,6 @@ public class CompileRequest {
 
 		return className;
 	}
-	
+		
 	public CompileRequest(){}
 }

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -38,6 +39,7 @@ import jnr.posix.POSIXFactory;
 public class Hello implements RequestStreamHandler {
 	public static final int REQUEST_HANDLER_VERSION = 1;
 	public static final int COMPILE_REQUEST_HANDLER_VERSION = 1;
+	public static final int DATA_HANDLER_VERSION = 1;
 	public static final int RESPONDER_VERSION = 1;
 		
 	/**
@@ -46,7 +48,7 @@ public class Hello implements RequestStreamHandler {
 	 * @return The compiled main class
 	 * @throws ClassNotFoundException
 	 */
-	public SpecialClassLoader compile(Iterable<? extends JavaFileObject> files) throws ClassNotFoundException
+	public FromMemoryClassLoader compile(Iterable<? extends JavaFileObject> files) throws ClassNotFoundException
 	{
 		URL[] urls = null;
 		try {
@@ -56,17 +58,17 @@ public class Hello implements RequestStreamHandler {
 		}
 		
 		final URLClassLoader urlcl = new URLClassLoader(urls, this.getClass().getClassLoader());
-		final SpecialClassLoader classLoader = new SpecialClassLoader(urlcl);   
+		final FromMemoryClassLoader classLoader = new FromMemoryClassLoader(urlcl);   
 		//get system compiler:
 		final JavaCompiler compiler = new EclipseCompiler();
 
 		// create a diagnostic listener for compilation diagnostic message processing on compilation WARNING/ERROR
-		final MyDiagnosticListener diag = new MyDiagnosticListener();
+		final CompileDiagnosticListener diag = new CompileDiagnosticListener();
 		final StandardJavaFileManager stdfileManager = compiler.getStandardFileManager(diag,
 				Locale.ENGLISH,
 				null);
         
-		SpecialJavaFileManager fileManager = new SpecialJavaFileManager(stdfileManager, classLoader);           
+		InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(stdfileManager, classLoader);           
 
 		//specify options for compiler
 		List<String> options = new ArrayList<String>();
@@ -93,7 +95,7 @@ public class Hello implements RequestStreamHandler {
 	public boolean runIt(Iterable<? extends JavaFileObject> files, String mainClass) {
 		// Compile the files using the JavaCompiler
 		try {
-			SpecialClassLoader classLoader = compile(files);
+			FromMemoryClassLoader classLoader = compile(files);
 						
 			Class compiledClass = classLoader.findClass(mainClass);
 		
@@ -160,7 +162,7 @@ public class Hello implements RequestStreamHandler {
 	public TestResult testIt(Iterable<? extends JavaFileObject> files, List<String> tests) {
 		TestResult score = new TestResult();
 		
-		SpecialClassLoader classLoader;
+		FromMemoryClassLoader classLoader;
 		// Compile the files using the JavaCompiler
 		try {
 			classLoader = compile(files);
@@ -281,15 +283,14 @@ public class Hello implements RequestStreamHandler {
 		System.setOut(ps);
 		
 		POSIX posix = POSIXFactory.getJavaPOSIX();
-		String workingDir = "/tmp/" + context.getAwsRequestId();
-		String startDir = new File(".").getCanonicalPath();
+		String workingDir = "/tmp";
+		String startDir = System.getProperty("user.dir");
 
 		// Create and move to a working directory
-		posix.mkdir(workingDir, 700);
+		//posix.mkdir(workingDir, 777);
 		//posix.chdir(workingDir);
-		System.setProperty("user.dir", new File(workingDir).getAbsoluteFile().getAbsolutePath());
-
-		posix.chdir(workingDir);
+		//System.setProperty("user.dir", workingDir);
+		
 		if (req != null) {
 			CompileRequest cReq = req.getCompileRequest();
 			if (cReq != null) {
@@ -303,6 +304,17 @@ public class Hello implements RequestStreamHandler {
 					String msg = "Compile Request version (" + cReq.getVersion() + ") is > (" + COMPILE_REQUEST_HANDLER_VERSION + ") output may be incorrect.";
 					result += msg;
 					System.err.println(msg);
+				}
+				
+				DataRequest data = req.getData();
+				
+				if	(data != null) {
+					if (data.getVersion() > DATA_HANDLER_VERSION) {
+						String msg = "Request data version (" + data.getVersion() + ") is > (" + DATA_HANDLER_VERSION + ") output may be incorrect.";
+						result += msg;
+						System.err.println(msg);
+					}
+					saveData(data);
 				}
 						
 				// Construct in-memory java source files from the request dynamic code
@@ -338,12 +350,18 @@ public class Hello implements RequestStreamHandler {
 			success = false;
 		}
 
-		posix.chdir(startDir);
-		posix.mkdir(workingDir + "/t", 700);
-		// Remove the working directory if created
-		posix.rmdir(workingDir);
+
 		// Move back to the starting dir
+		posix.chdir(startDir);
 		System.setProperty("user.dir", startDir);
+		
+		// Remove the working directory if created
+		File dir = new File(workingDir).getAbsoluteFile();
+		cleanDir(dir);
+		
+		if (dir.list().length>0) {
+			System.err.println("Working Directory not emptied.");
+		}
 		
 		Runtime runtime = Runtime.getRuntime();
 		StringBuilder sb = new StringBuilder();
@@ -369,10 +387,44 @@ public class Hello implements RequestStreamHandler {
 		mapper.writeValue(output, resp);
 	}
 	
+	private void saveData(DataRequest data) {
+		for (DataRequest.DataFile file : data.getDataFiles()) {
+			
+			File f = (new File(file.getName()));
+			
+			PrintWriter out = null;
+
+			try {
+				out = new PrintWriter(f.getAbsoluteFile());
+				
+				for (String text : file.getContents()) {
+					out.println(text);
+				}
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				System.err.println("Couldn't write file: " + file.getName());
+			}
+			finally {
+				if (out != null) {
+					out.close();
+				}
+			}
+		}
+	}
+	
+	private void cleanDir(File dir) {
+		File[] dirfiles = dir.listFiles();
+		
+		for (File f : dirfiles) {
+			if (f.isDirectory()) {
+				cleanDir(f);
+			}
+			f.delete();
+		}
+	}
+
 	public Hello() {
-		POSIX posix = POSIXFactory.getJavaPOSIX();
-		String workingDir = "/tmp";
-		posix.chdir(workingDir);
+		
 	}
 	
 	public static void main (String args[]) {

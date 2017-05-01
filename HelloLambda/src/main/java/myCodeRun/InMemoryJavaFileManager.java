@@ -9,11 +9,11 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.JavaFileManager.Location;
 
 @SuppressWarnings({ "unused", "rawtypes" })
-public class SpecialJavaFileManager extends ForwardingJavaFileManager {   
-	private SpecialClassLoader xcl;   
+public class InMemoryJavaFileManager extends ForwardingJavaFileManager {   
+	private FromMemoryClassLoader xcl;   
 	
 	@SuppressWarnings("unchecked")
-	public SpecialJavaFileManager(StandardJavaFileManager sjfm, SpecialClassLoader xcl) {       
+	public InMemoryJavaFileManager(StandardJavaFileManager sjfm, FromMemoryClassLoader xcl) {       
 		super(sjfm);       
 		this.xcl = xcl;   
 	}
