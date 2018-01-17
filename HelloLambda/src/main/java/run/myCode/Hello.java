@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -313,7 +312,9 @@ public class Hello implements RequestStreamHandler {
 					success = testResults.getSuccess();
 
 				} else if (req.getTestType().equalsIgnoreCase("zombieland")) {
-					System.err.println("Num threads running: " + ManagementFactory.getThreadMXBean().getThreadCount());
+					// System.err.println("Num threads running: " +
+					// ManagementFactory.getThreadMXBean().getThreadCount());
+
 					// Get the myZombie source file
 					String myZombieSource = "";
 					for (JavaFileObject file : files) {
@@ -338,16 +339,17 @@ public class Hello implements RequestStreamHandler {
 						scenarios.add(scenario);
 					}
 
-					long prep = System.nanoTime() - startTime;
-					System.err.printf("Zombie prep time: %.2f\n", prep / 1.0e9);
+					// long prep = System.nanoTime() - startTime;
+					// System.err.printf("Zombie prep time: %.2f\n", prep / 1.0e9);
 
 					testResults = zombieDo(myZombieSource, scenarios);
 					success = testResults.getSuccess();
 
-					long test = System.nanoTime() - startTime - prep;
-					System.err.printf("Zombie test time: %.2f\n", test / 1.0e9);
-					System.err.println(
-							"Num threads still running: " + ManagementFactory.getThreadMXBean().getThreadCount());
+					// long test = System.nanoTime() - startTime - prep;
+					// System.err.printf("Zombie test time: %.2f\n", test / 1.0e9);
+					// System.err.println(
+					// "Num threads still running: " +
+					// ManagementFactory.getThreadMXBean().getThreadCount());
 				} else {
 					System.err.println("Nothing to do");
 					result += "Nothing to do.";
