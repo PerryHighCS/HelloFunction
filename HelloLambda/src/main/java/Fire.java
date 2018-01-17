@@ -42,18 +42,9 @@ public class Fire extends Actor {
 	 * extinguish if so.
 	 */
 	private void checkForWater() {
-		synchronized (Zombie.class) {
-			ClassLoader cl = this.getClass().getClassLoader();
-
-			try {
-				Class<?> bucketClass = cl.loadClass("Bucket");
-
-				while (isTouching(bucketClass)) {
-					removeTouching(bucketClass);
-					fireMode = SMOKE;
-				}
-			} catch (ClassNotFoundException e) {
-			}
+		while (isTouching(Bucket.class)) {
+			removeTouching(Bucket.class);
+			fireMode = SMOKE;
 		}
 	}
 }

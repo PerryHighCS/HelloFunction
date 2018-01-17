@@ -1,14 +1,9 @@
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +30,6 @@ public class ZombieLand extends World {
 	String message = null;
 	private boolean done = false;
 	private boolean hasWon;
-	private final ClassLoader cl;
 
 	/**
 	 * Create a ZombieLand of a given size, with a classloader that can load classes
@@ -45,18 +39,8 @@ public class ZombieLand extends World {
 	 * @param height
 	 * @param cl
 	 */
-	public ZombieLand(int width, int height, ClassLoader cl) {
+	public ZombieLand(int width, int height) {
 		super(width, height, 64);
-		if (cl == null) {
-			try {
-				URI url = (new File(".")).toURI();
-				URL[] urls = new URL[] { url.toURL() };
-				cl = new URLClassLoader(urls, this.getClass().getClassLoader());
-			} catch (MalformedURLException e) {
-			}
-		}
-		this.cl = cl;
-
 	}
 
 	/**
@@ -96,7 +80,7 @@ public class ZombieLand extends World {
 		// Set the world width and height
 		int width = Integer.parseInt(root.getAttribute("width"));
 		int height = Integer.parseInt(root.getAttribute("height"));
-		ZombieLand realWorld = new ZombieLand(width, height, cl);
+		ZombieLand realWorld = new ZombieLand(width, height);
 
 		// Get handles to the initial and objective description nodes
 		Node initial = root.getElementsByTagName("initial").item(0);
@@ -161,8 +145,7 @@ public class ZombieLand extends World {
 				switch (className) {
 				case "Brain":
 					// Create instances at this location
-					constructor = objClass.getConstructor(int.class);
-					a = (Actor) constructor.newInstance(count);
+					a = new Brain(count);
 					realWorld.addObject(a, x, y);
 					a.setRotation(dir);
 					if (calls != null) {
@@ -398,6 +381,10 @@ public class ZombieLand extends World {
 			List<GoalObject> state = new ArrayList<>();
 			synchronized (Zombie.class) {
 				for (Actor a : actors) {
+					if (a.getClass().getName().contains("$")) {
+						continue;
+					}
+
 					GoalObject gObj = new GoalObject();
 					gObj.a = a;
 					gObj.name = a.getClass().getName();
@@ -406,34 +393,11 @@ public class ZombieLand extends World {
 					gObj.y = a.getY();
 					gObj.dir = a.getRotation();
 					gObj.count = 1;
+
 					if (gObj.name.equals("Brain")) {
-						try {
-							Class<?> objClass = cl.loadClass("Brain");
-
-							Method m = objClass.getMethod("getNum");
-							Integer rval = (Integer) m.invoke(a);
-							gObj.count = rval;
-						} catch (Exception e) {
-						}
+						gObj.count = ((Brain) a).getNum();
 					}
-
-					if (!gObj.name.contains("$")) {
-						boolean duplicate = false;
-
-						for (int i = 0; i < state.size(); i++) {
-							GoalObject o = state.get(i);
-
-							if (o.name.equals(gObj.name) && o.x == gObj.x && o.y == gObj.y) {
-								duplicate = true;
-								o.count = o.count + 1;
-								break;
-							}
-						}
-
-						if (!duplicate) {
-							state.add(gObj);
-						}
-					}
+					state.add(gObj);
 				}
 
 				if (goal != null && state.size() == goal.size()) {
@@ -495,6 +459,36 @@ public class ZombieLand extends World {
 						&& this.count == other.count && hasCalls == true;
 			}
 			return false;
+		}
+	}
+
+	/**
+	 * Stop the ZombieLand scenario
+	 */
+	public void endIt() {
+		List<Zombie> zombies = getObjects(Zombie.class);
+		System.err.println(zombies.size() + " zombies left over.");
+
+		while (zombies.size() > 0) {
+			for (Zombie z : zombies) {
+				Thread t = z.getThread();
+
+				if (t != null && !t.isInterrupted() && t.isAlive()) {
+					z.endIt();
+					z.act();
+				} else {
+					removeObject(z);
+				}
+			}
+
+			synchronized (Zombie.class) {
+				Zombie.class.notifyAll();
+			}
+
+			Thread.yield();
+
+			zombies = getObjects(Zombie.class);
+			System.err.println(zombies.size() + " zombies left over.");
 		}
 	}
 }

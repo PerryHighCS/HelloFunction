@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -190,6 +191,7 @@ public class Hello implements RequestStreamHandler {
 			scenarioCase.setBody(r.getOutput());
 			scenarioCase.setImage(r.image());
 			scenarioCase.setElapsedTime(r.getTime());
+			scenarioCase.setActCount(r.getActCount());
 			res.addCase(scenarioCase);
 		});
 
@@ -240,6 +242,9 @@ public class Hello implements RequestStreamHandler {
 
 	@Override
 	public void handleRequest(InputStream input, OutputStream output, Context context) throws IOException {
+
+		long startTime = System.nanoTime();
+
 		ObjectMapper mapper = new ObjectMapper();
 		LambdaAPIRequest apiReq = mapper.readValue(input, LambdaAPIRequest.class);
 
@@ -308,6 +313,7 @@ public class Hello implements RequestStreamHandler {
 					success = testResults.getSuccess();
 
 				} else if (req.getTestType().equalsIgnoreCase("zombieland")) {
+					System.err.println("Num threads running: " + ManagementFactory.getThreadMXBean().getThreadCount());
 					// Get the myZombie source file
 					String myZombieSource = "";
 					for (JavaFileObject file : files) {
@@ -331,8 +337,17 @@ public class Hello implements RequestStreamHandler {
 						}
 						scenarios.add(scenario);
 					}
+
+					long prep = System.nanoTime() - startTime;
+					System.err.printf("Zombie prep time: %.2f\n", prep / 1.0e9);
+
 					testResults = zombieDo(myZombieSource, scenarios);
 					success = testResults.getSuccess();
+
+					long test = System.nanoTime() - startTime - prep;
+					System.err.printf("Zombie test time: %.2f\n", test / 1.0e9);
+					System.err.println(
+							"Num threads still running: " + ManagementFactory.getThreadMXBean().getThreadCount());
 				} else {
 					System.err.println("Nothing to do");
 					result += "Nothing to do.";
@@ -376,6 +391,7 @@ public class Hello implements RequestStreamHandler {
 		sb.append("allocated memory: " + format.format(allocatedMemory / 1024) + "\t");
 		sb.append("max memory: " + format.format(maxMemory / 1024) + "\t");
 		sb.append("total free memory: " + format.format((freeMemory + (maxMemory - allocatedMemory)) / 1024) + "\t");
+		sb.append("request duration: " + format.format((System.nanoTime() - startTime) / 1.0e9) + "sec");
 		System.err.println(sb.toString());
 
 		CompileResponse resp = new CompileResponse();

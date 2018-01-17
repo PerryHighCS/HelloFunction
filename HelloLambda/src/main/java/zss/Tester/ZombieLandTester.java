@@ -35,6 +35,8 @@ public class ZombieLandTester {
 	 * @return the result of the test
 	 */
 	public static List<Result> doScenario(String[] scenarios, String zombieSource, long maxTime) {
+		long startTime = System.nanoTime();
+
 		List<Result> results = new ArrayList<>();
 
 		// Create a stream to hold system output during tests
@@ -43,7 +45,7 @@ public class ZombieLandTester {
 		PrintStream old = System.out;
 		PrintStream oldErr = System.err;
 		System.setOut(ps);
-		System.setErr(ps);
+		// System.setErr(ps);
 
 		try {
 			InMemoryJavaFileObject myZombie = new InMemoryJavaFileObject("MyZombie.java", zombieSource);
@@ -58,6 +60,9 @@ public class ZombieLandTester {
 			Class<?> zlc = urlcl.loadClass("ZombieLand");
 
 			ClassLoader cl = MemoryCompiler.compile(files, urlcl);
+
+			long compTime = System.nanoTime();
+			System.err.printf("Compile time: %.2f\n", (compTime - startTime) / 1.0e9);
 
 			if (cl != null) {
 				Method lw = zlc.getMethod("loadWorld", String.class, ClassLoader.class);
@@ -74,7 +79,7 @@ public class ZombieLandTester {
 					results.add(r);
 				}
 			} else {
-				Result r = new Result(false, "Plan no make sense.", null, 0);
+				Result r = new Result(false, "Plan no make sense.", null, 0, 0);
 				r.setOutput(baos.toString());
 				baos.reset();
 				results.add(r);
@@ -85,7 +90,7 @@ public class ZombieLandTester {
 			pw.println(e.getTargetException().getMessage());
 			e.getTargetException().printStackTrace(pw);
 
-			Result r = new Result(false, sw.toString(), null, 0);
+			Result r = new Result(false, sw.toString(), null, 0, 0);
 			r.setOutput(baos.toString() + sw.toString());
 
 			System.setErr(oldErr);
@@ -100,7 +105,7 @@ public class ZombieLandTester {
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
 
-			Result r = new Result(false, sw.toString(), null, 0);
+			Result r = new Result(false, sw.toString(), null, 0, 0);
 			r.setOutput(baos.toString() + sw.toString());
 
 			System.setErr(oldErr);
@@ -133,27 +138,34 @@ public class ZombieLandTester {
 		}
 
 		long startTime = System.nanoTime();
-		// long actCount = 1;
+		long actCount = 1;
 
 		// Repeatedly run the scenario by calling act on the world and all of
 		// the actors therein
-		while ((System.nanoTime() - startTime < maxTime
-				&& !(Boolean) zl.getClass().getMethod("isFinished").invoke(zl))) {
+		while ((System.nanoTime() - startTime < maxTime)
+				&& !(Boolean) zl.getClass().getMethod("isFinished").invoke(zl)) {
 			zl.act();
 
 			List<Actor> actors = zl.getObjects(null);
 			actors.forEach(a -> a.act());
-			// actCount++;
+			actCount++;
 		}
+
+		System.err.println("Test Complete");
 
 		// Once the scenario completes or runs out of time, generate and return
 		// the result
 		boolean success = (Boolean) zl.getClass().getMethod("success").invoke(zl);
 		String finalMessage = (String) zl.getClass().getMethod("finalMessage").invoke(zl);
+
+		System.err.println("Making image");
 		Image image = (Image) zl.getClass().getMethod("image").invoke(zl);
 
 		double elapsed = (System.nanoTime() - startTime) / 1000000000D;
 
-		return new Result(success, finalMessage, image, elapsed);
+		System.err.println("Ending it all");
+		zl.getClass().getMethod("endIt").invoke(zl);
+
+		return new Result(success, finalMessage, image, elapsed, actCount);
 	}
 }

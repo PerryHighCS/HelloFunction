@@ -1,10 +1,8 @@
 import java.awt.Image;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.List;
 
 import greenfoot.Actor;
+import zss.Tester.ZombifiedZombieException;
 
 /**
  * A programmable zombie character.
@@ -13,7 +11,8 @@ import greenfoot.Actor;
  * @version 1.0
  */
 public abstract class Zombie extends Actor {
-	private volatile Thread thinker;
+	protected volatile Thread thinker;
+	protected volatile boolean shouldQuit = false;
 
 	private volatile int numBrains = 0;
 
@@ -30,28 +29,33 @@ public abstract class Zombie extends Actor {
 			while (getWorld() == null && thinker == thisThread) {
 			}
 
-			if (thinker != thisThread) {
+			if (shouldQuit) {
 				return;
 			}
 
 			synchronized (Zombie.class) {
 				try {
 					Zombie.class.wait(); // Wait for an act signal before beginning the plan
+					if (shouldQuit) {
+						return;
+					}
 
 					plan(); // Follow the plan
 
 					Zombie.class.wait(); // Wait for an act signal after the plan ends for everything to settle down
 
-					if (thinker == thisThread && stillTrying()) { // If the Zombie hasn't solved its problems,
+					if (!shouldQuit && stillTrying()) { // If the Zombie hasn't solved its problems,
 						die(); // Kill it
 					}
-				} catch (InterruptedException | java.lang.IllegalStateException e) {
+
+				} catch (InterruptedException | IllegalStateException e) {
 					// If the plan is interrupted, or the zombie was removed, causing an illegal
-					// state,
-					// end the zombie
+					// state, end the zombie
 					if (stillTrying())
 						die(true);
+				} catch (ZombifiedZombieException e) {
 				}
+
 			}
 		});
 
@@ -65,10 +69,10 @@ public abstract class Zombie extends Actor {
 	public final void act() {
 		synchronized (Zombie.class) {
 			if (!undead || won) { // If the zombie is no more, stop doing things.
-				if (thinker != null && !thinker.isInterrupted())
+				if (!shouldQuit || !thinker.isInterrupted()) {
+					shouldQuit = true;
 					thinker.interrupt();
-				thinker = null;
-				return;
+				}
 			}
 
 			Zombie.class.notify(); // release the lock to perform the next step in the plan
@@ -100,6 +104,9 @@ public abstract class Zombie extends Actor {
 	 * Move forward one step.
 	 */
 	public final void move() {
+		if (shouldQuit) {
+			throw new ZombifiedZombieException();
+		}
 		synchronized (Zombie.class) {
 			try {
 				Zombie.class.wait(); // Wait for an act signal
@@ -115,6 +122,7 @@ public abstract class Zombie extends Actor {
 					}
 				}
 			} catch (InterruptedException e) {
+				throw new ZombifiedZombieException();
 			}
 		}
 	}
@@ -123,9 +131,7 @@ public abstract class Zombie extends Actor {
 	 * Turn 90 degrees to the right.
 	 */
 	public final void turnRight() {
-		synchronized (Zombie.class) {
-			turn(1);
-		}
+		turn(1);
 	}
 
 	/**
@@ -136,6 +142,9 @@ public abstract class Zombie extends Actor {
 	 */
 	@Override
 	public final void turn(int turns) {
+		if (shouldQuit) {
+			throw new ZombifiedZombieException();
+		}
 		synchronized (Zombie.class) {
 			try {
 				Zombie.class.wait();
@@ -144,6 +153,7 @@ public abstract class Zombie extends Actor {
 
 				super.turn(degrees);
 			} catch (InterruptedException e) {
+				throw new ZombifiedZombieException();
 			}
 		}
 	}
@@ -152,25 +162,25 @@ public abstract class Zombie extends Actor {
 	 * Pick up brains if they exist. End if not.
 	 */
 	public final void takeBrain() {
-		ClassLoader cl = this.getClass().getClassLoader();
-
+		if (shouldQuit) {
+			throw new ZombifiedZombieException();
+		}
 		synchronized (Zombie.class) {
 			try {
 				Zombie.class.wait();
-				if (stillTrying()) {
-					Class<?> brainClass = cl.loadClass("Brain");
-					Actor a = getOneIntersectingObject(brainClass);
 
-					if (a != null) {
+				if (stillTrying()) {
+					Brain b = (Brain) getOneIntersectingObject(Brain.class);
+
+					if (b != null) {
 						numBrains++;
-						Method remove = brainClass.getMethod("removeBrain");
-						remove.invoke(a);
+						b.removeBrain();
 					} else {
 						((ZombieLand) getWorld()).finish("Zombie no get brain.", false);
 					}
 				}
-			} catch (ClassNotFoundException | InterruptedException | NoSuchMethodException | IllegalAccessException
-					| InvocationTargetException e) {
+			} catch (InterruptedException e) {
+				throw new ZombifiedZombieException();
 			}
 		}
 	}
@@ -179,37 +189,35 @@ public abstract class Zombie extends Actor {
 	 * Put down a brain if the Zombie has one. End if not.
 	 */
 	public final void putBrain() {
-		ClassLoader cl = this.getClass().getClassLoader();
-
+		if (shouldQuit) {
+			throw new ZombifiedZombieException();
+		}
 		synchronized (Zombie.class) {
 			try {
 				Zombie.class.wait();
+
 				if (stillTrying()) {
 					if (numBrains > 0) {
 						numBrains--;
 
-						Class<?> brainClass = cl.loadClass("Brain");
-						Actor a = getOneIntersectingObject(brainClass);
+						Brain b = (Brain) getOneIntersectingObject(Brain.class);
 
-						if (a == null) {
-							Constructor<?> constructor = brainClass.getConstructor();
-							a = (Actor) constructor.newInstance();
+						if (b == null) {
+							b = new Brain();
 
-							getWorld().addObject(a, getX(), getY());
+							getWorld().addObject(b, getX(), getY());
 						} else {
-							Method add = brainClass.getMethod("addBrain");
-							add.invoke(a);
+							b.addBrain();
 						}
 					} else {
 						die();
 						((ZombieLand) getWorld()).finish("Zombie no have brain.", false);
 					}
 				}
-			} catch (ClassNotFoundException | InterruptedException | NoSuchMethodException | InstantiationException
-					| IllegalAccessException | InvocationTargetException e) {
-				System.out.println("Exception!" + e.toString());
-				((ZombieLand) getWorld()).finish("Zombie no have brain.", false);
+			} catch (InterruptedException e) {
+				throw new ZombifiedZombieException();
 			}
+
 		}
 	}
 
@@ -254,14 +262,17 @@ public abstract class Zombie extends Actor {
 	 * @return true if the zombie has brains
 	 */
 	public final boolean haveBrains() {
+		if (shouldQuit) {
+			throw new ZombifiedZombieException();
+		}
 		synchronized (Zombie.class) {
 			try {
 				Zombie.class.wait();
+
 				return numBrains > 0;
 			} catch (InterruptedException e) {
+				throw new ZombifiedZombieException();
 			}
-
-			return false;
 		}
 	}
 
@@ -282,13 +293,17 @@ public abstract class Zombie extends Actor {
 	 * @return true if there is space to move in front of the zombie
 	 */
 	public final boolean isFrontClear() {
+		if (shouldQuit) {
+			throw new ZombifiedZombieException();
+		}
 		synchronized (Zombie.class) {
 			try {
 				Zombie.class.wait();
+
 				return checkFront("Wall", 1) == null && checkFront(null, 1) != this;
 			} catch (InterruptedException e) {
+				throw new ZombifiedZombieException();
 			}
-			return false;
 		}
 	}
 
@@ -296,11 +311,17 @@ public abstract class Zombie extends Actor {
 	 * Die, for reals this time.
 	 */
 	public final void die() {
+		if (shouldQuit) {
+			throw new ZombifiedZombieException();
+		}
 		synchronized (Zombie.class) {
 			try {
 				Zombie.class.wait();
+
 				undead = false;
+				shouldQuit = true;
 			} catch (InterruptedException e) {
+				throw new ZombifiedZombieException();
 			}
 		}
 	}
@@ -311,18 +332,11 @@ public abstract class Zombie extends Actor {
 	 * @param fast
 	 */
 	public final void die(boolean fast) {
-		synchronized (Zombie.class) {
-			if (!fast) {
-				die();
-			} else {
-				undead = false;
-				// thinker.interrupt();
-
-				// World w = getWorld();
-				// if (w != null) {
-				// getWorld().removeObject(this);
-				// }
-			}
+		if (!fast) {
+			die();
+		} else {
+			undead = false;
+			shouldQuit = true;
 		}
 	}
 
@@ -496,6 +510,20 @@ public abstract class Zombie extends Actor {
 			}
 		}
 
-		return loadSprite(spriteName, null);
+		Image sprite = imgs.get(spriteName);
+		if (sprite == null) {
+			sprite = loadSprite(spriteName, null);
+			imgs.put(spriteName, sprite);
+		}
+		return sprite;
+	}
+
+	public Thread getThread() {
+		return thinker;
+	}
+
+	public void endIt() {
+		shouldQuit = true;
+		thinker.interrupt();
 	}
 }

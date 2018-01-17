@@ -3,7 +3,9 @@ package greenfoot;
 import java.awt.Color;
 import java.awt.Image;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A headless reimplementation of the Greenfoot Actor class
@@ -13,6 +15,8 @@ public abstract class Actor {
 	private int yPos;
 	private int dir;
 	private World world;
+
+	protected static Map<String, Image> imgs = new HashMap<>();
 
 	public Actor() {
 		this.xPos = 0;
@@ -346,8 +350,11 @@ public abstract class Actor {
 	public Image getImage() {
 		String spriteName = this.getClass().getSimpleName();
 
-		Image sprite = loadSprite(spriteName, null);
-
+		Image sprite = imgs.get(spriteName);
+		if (sprite == null) {
+			sprite = loadSprite(spriteName, null);
+			imgs.put(spriteName, sprite);
+		}
 		return sprite;
 	}
 
@@ -358,7 +365,7 @@ public abstract class Actor {
 	 * @param failFill
 	 * @return
 	 */
-	public Image loadSprite(String name, Color failFill) {
+	protected Image loadSprite(String name, Color failFill) {
 		return world.loadSprite(name, Color.red);
 	}
 }

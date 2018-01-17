@@ -4,7 +4,6 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 
-@SuppressWarnings("unused")
 public class CompileDiagnosticListener implements DiagnosticListener<JavaFileObject> {
 
 	@Override

@@ -19,6 +19,7 @@ public class ZombieResult extends TestResult {
 
 		private String imgData;
 		private Double elapsedTime;
+		private long actCount;
 
 		@JsonProperty("elapsedTime")
 		public Double getElapsedTime() {
@@ -78,6 +79,16 @@ public class ZombieResult extends TestResult {
 			} catch (IOException e) {
 				return null;
 			}
+		}
+
+		@JsonProperty("actCount")
+		public long getActCount() {
+			return actCount;
+		}
+
+		@JsonProperty("actCount")
+		public void setActCount(long actCount) {
+			this.actCount = actCount;
 		}
 
 	}

@@ -277,5 +277,4 @@ public abstract class World {
 
 		g.drawImage(sprite, xPos, yPos, null);
 	}
-
 }
