@@ -467,7 +467,7 @@ public class ZombieLand extends World {
 	 */
 	public void endIt() {
 		List<Zombie> zombies = getObjects(Zombie.class);
-		System.err.println(zombies.size() + " zombies left over.");
+		// System.err.println(zombies.size() + " zombies left over.");
 
 		while (zombies.size() > 0) {
 			for (Zombie z : zombies) {
@@ -488,7 +488,7 @@ public class ZombieLand extends World {
 			Thread.yield();
 
 			zombies = getObjects(Zombie.class);
-			System.err.println(zombies.size() + " zombies left over.");
+			// System.err.println(zombies.size() + " zombies left over.");
 		}
 	}
 }

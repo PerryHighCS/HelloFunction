@@ -35,7 +35,7 @@ public class ZombieLandTester {
 	 * @return the result of the test
 	 */
 	public static List<Result> doScenario(String[] scenarios, String zombieSource, long maxTime) {
-		long startTime = System.nanoTime();
+		// long startTime = System.nanoTime();
 
 		List<Result> results = new ArrayList<>();
 
@@ -45,7 +45,7 @@ public class ZombieLandTester {
 		PrintStream old = System.out;
 		PrintStream oldErr = System.err;
 		System.setOut(ps);
-		// System.setErr(ps);
+		System.setErr(ps);
 
 		try {
 			InMemoryJavaFileObject myZombie = new InMemoryJavaFileObject("MyZombie.java", zombieSource);
@@ -61,8 +61,8 @@ public class ZombieLandTester {
 
 			ClassLoader cl = MemoryCompiler.compile(files, urlcl);
 
-			long compTime = System.nanoTime();
-			System.err.printf("Compile time: %.2f\n", (compTime - startTime) / 1.0e9);
+			// long compTime = System.nanoTime();
+			// System.err.printf("Compile time: %.2f\n", (compTime - startTime) / 1.0e9);
 
 			if (cl != null) {
 				Method lw = zlc.getMethod("loadWorld", String.class, ClassLoader.class);
@@ -149,21 +149,22 @@ public class ZombieLandTester {
 			List<Actor> actors = zl.getObjects(null);
 			actors.forEach(a -> a.act());
 			actCount++;
+			Thread.yield();
 		}
 
-		System.err.println("Test Complete");
+		// System.err.println("Test Complete");
 
 		// Once the scenario completes or runs out of time, generate and return
 		// the result
 		boolean success = (Boolean) zl.getClass().getMethod("success").invoke(zl);
 		String finalMessage = (String) zl.getClass().getMethod("finalMessage").invoke(zl);
 
-		System.err.println("Making image");
+		// System.err.println("Making image");
 		Image image = (Image) zl.getClass().getMethod("image").invoke(zl);
 
 		double elapsed = (System.nanoTime() - startTime) / 1000000000D;
 
-		System.err.println("Ending it all");
+		// System.err.println("Ending it all");
 		zl.getClass().getMethod("endIt").invoke(zl);
 
 		return new Result(success, finalMessage, image, elapsed, actCount);
