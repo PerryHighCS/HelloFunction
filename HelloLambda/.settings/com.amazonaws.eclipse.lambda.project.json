@@ -1,0 +1,1 @@
+{"lastDeploymentHandler":"run.myCode.Hello","lastInvokeHandler":null,"handlerMetadata":{"run.myCode.Hello":{"deployment":{"regionId":"us-west-2","awsLambdaFunctionName":"HelloFunction","awsIamRoleName":"hello-lambda-role","awsS3BucketName":"hello-lambda-1334","memory":0,"timeout":0},"invoke":null}},"lastInvokedHandlerDeployed":false}

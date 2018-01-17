@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Backend runner for mycode.run
+Resources:
+  HelloFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: run.MyCode.Hello::handleRequest
+      Runtime: java8
+      MemorySize: 384
+      CodeUri: target/hellofunction-4.0.0.jar
+      Policies: AWSLambdaBasicExecutionRole
+      Timeout: 20
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: any
+
+Outputs:
+  HelloGateway:
+    Description: Compile Run and Test simple to intermediate console Java Code
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/HelloFunction'
+    Export:
+      Name: HelloGateway

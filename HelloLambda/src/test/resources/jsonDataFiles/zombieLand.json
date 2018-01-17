@@ -1,0 +1,73 @@
+{
+   "test-type":"zombieland",
+   "compile":{
+      "mainClass":"",
+      "sourceFiles":[
+         {
+            "name":"MyZombie.java",
+            "contents":[
+               "import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)",
+               "public class MyZombie extends Zombie",
+               "{",
+               "    public void plan()",
+               "    {",
+               "        turnRight();",
+               "        move();",
+               "        turnRight();",
+               "        turnRight();",
+               "        turnRight();",
+               "        move();",
+               "        move();",
+               "        move();",
+               "        move();",
+               "        turnRight();",
+               "        turnRight();",
+               "        turnRight();",
+               "        move();",
+               "    }",
+               "}"
+            ]
+         }
+      ]
+   },
+   "data":{
+      "dataFiles":[
+         {
+            "name":"ZombieLand.xml",
+            "contents":[
+               "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>",
+               "<scenario>",
+               "   <world height=\"2\" width=\"5\">",
+               "      <initial>",
+               "         <object classname=\"ZombieGoal\">",
+               "            <location dir=\"0\" x=\"4\" y=\"0\"/>",
+               "         </object>",
+               "         <object classname=\"Fire\">",
+               "            <location dir=\"0\" x=\"2\" y=\"0\"/>",
+               "            <location dir=\"0\" x=\"2\" y=\"1\"/>",
+               "         </object>",
+               "         <object classname=\"Bucket\">",
+               "            <location dir=\"0\" x=\"1\" y=\"1\"/>",
+               "         </object>",
+               "         <object classname=\"MyZombie\">",
+               "            <location dir=\"0\" x=\"0\" y=\"0\"/>",
+               "         </object>",
+               "      </initial>",
+               "      <objective>",
+               "         <object classname=\"ZombieGoal\">",
+               "            <location dir=\"0\" x=\"4\" y=\"0\"/>",
+               "         </object>",
+               "         <object classname=\"Fire\">",
+               "            <location dir=\"0\" x=\"2\" y=\"0\"/>",
+               "         </object>",
+               "         <object classname=\"MyZombie\">",
+               "            <location x=\"4\" y=\"0\"/>",
+               "         </object>",
+               "      </objective>",
+               "   </world>",
+               "</scenario>"
+            ]
+         }
+      ]
+   }
+}
