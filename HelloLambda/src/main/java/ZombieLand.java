@@ -404,6 +404,22 @@ public class ZombieLand extends World {
 					if (state.containsAll(goal)) {
 						finish("Zombie do good.", true);
 						return true;
+					} else {
+						// Make sure that there aren't still zombies trying
+						List<Zombie> zombies = getObjects(Zombie.class);
+
+						boolean stillTrying = false;
+						for (Zombie z : zombies) {
+							if (z.stillTrying()) {
+								stillTrying = true;
+								break;
+							}
+						}
+
+						// If nobody's still trying, the plan has failed
+						if (!stillTrying) {
+							finish("Zombie no do good.", false);
+						}
 					}
 				}
 			}

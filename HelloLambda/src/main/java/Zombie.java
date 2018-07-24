@@ -127,6 +127,13 @@ public abstract class Zombie extends Actor {
 		}
 	}
 
+	@Override
+	public final void move(int x) {
+		while (x > 0 && !isDead() && !hasWon()) {
+			move();
+		}
+	}
+
 	/**
 	 * Turn 90 degrees to the right.
 	 */
