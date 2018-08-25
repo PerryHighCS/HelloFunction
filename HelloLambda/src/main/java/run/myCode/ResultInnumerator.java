@@ -17,7 +17,6 @@ public class ResultInnumerator extends RunListener {
 		this.testResults = new TestResult();
 	}
 
-
 	/**
 	 * Called before a test run is begun
 	 */
@@ -39,24 +38,25 @@ public class ResultInnumerator extends RunListener {
 	}
 
 	/**
-	 * Called when a test case is run but assumptions the test requires to be true are not met
+	 * Called when a test case is run but assumptions the test requires to be true
+	 * are not met
 	 * 
 	 * @see org.junit.runner.notification.RunListener#testAssumptionFailure(org.junit.runner.notification.Failure)
 	 */
 	@Override
 	public void testAssumptionFailure(Failure failure) {
 		super.testAssumptionFailure(failure);
-		
+
 		String description = "Current execution state does not meet assumptions made by test.\n";
 		description += failure.getMessage();
-		
+
 		String body = output.toString();
 		body += stackTrace(failure.getException().getStackTrace(),
 				failure.getDescription().getClassName() + "." + failure.getDescription().getMethodName());
-		
+
 		testResults.addTest(description, body, false);
 		testFailed = true;
-		
+
 	}
 
 	/**
@@ -65,21 +65,21 @@ public class ResultInnumerator extends RunListener {
 	@Override
 	public void testFailure(Failure failure) throws Exception {
 		super.testFailure(failure);
-		
+
 		String description = failure.getDescription().toString();
-		
+
 		Throwable realException = failure.getException();
 		if (realException.getCause() != null) {
 			realException = realException.getCause();
 		}
-		
+
 		String body = output.toString();
-		body += realException.getMessage();
+		body += realException.toString();
 		body += "\n-----\n";
 		body += "Call Stack:\n";
-		body += stackTrace(realException.getStackTrace(), 
+		body += stackTrace(realException.getStackTrace(),
 				failure.getDescription().getClassName() + "." + failure.getDescription().getMethodName());
-		
+
 		testResults.addTest(description, body, false);
 		testFailed = true;
 	}
@@ -93,10 +93,10 @@ public class ResultInnumerator extends RunListener {
 
 		if (!testFailed) {
 			String body = output.toString();
-			
+
 			testResults.addTest(description.getDisplayName(), body, true);
 		}
-		
+
 	}
 
 	/**
@@ -119,7 +119,7 @@ public class ResultInnumerator extends RunListener {
 			trace += "\t";
 			trace += frame.toString();
 			trace += "\n";
-			
+
 			if ((frame.getClassName() + "." + frame.getMethodName()).equals(stackBottom)) {
 				break;
 			}

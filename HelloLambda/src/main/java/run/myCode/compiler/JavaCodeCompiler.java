@@ -58,7 +58,7 @@ public class JavaCodeCompiler {
 	 * @return The compiled main class
 	 * @throws ClassNotFoundException
 	 */
-	public static FromMemoryClassLoader compile(Iterable<? extends JavaFileObject> files, URLClassLoader urlcl,
+	public static FromMemoryClassLoader compile(Iterable<? extends JavaFileObject> files, ClassLoader urlcl,
 			List<String> options) throws ClassNotFoundException {
 
 		final FromMemoryClassLoader classLoader = new FromMemoryClassLoader(urlcl);
@@ -84,11 +84,11 @@ public class JavaCodeCompiler {
 		Writer out = new PrintWriter(System.out);
 		JavaCompiler.CompilationTask task = compiler.getTask(out, fileManager, diag, options, null, files);
 
-		Boolean result = task.call();
-		if (result == true) {
-			return classLoader;
-		}
-		return null;
+		boolean result = task.call();
+		// if (result == true) {
+		return classLoader;
+		// }
+		// return null;
 	}
 
 }

@@ -118,7 +118,8 @@ public class Hello implements RequestStreamHandler {
 		TestResult score = new TestResult();
 
 		FromMemoryClassLoader classLoader;
-		// Compile the files using the JavaCompiler
+
+		// Compile the source files using the JavaCompiler
 		try {
 			classLoader = JavaCodeCompiler.compile(files, null);
 		} catch (ClassNotFoundException | NullPointerException e) {
@@ -137,37 +138,38 @@ public class Hello implements RequestStreamHandler {
 		ResultInnumerator allResults = new ResultInnumerator(baos);
 		junit.addListener(allResults);
 
-		// Have JUnit run the test cases specified
-		try {
-			List<Class<?>> classes = new ArrayList<Class<?>>();
+		// Have JUnit run the test classes specified
+		for (String test : tests) {
+			try {
+				// List<Class<?>> classes = new ArrayList<Class<?>>();
 
-			for (String test : tests) {
-				classes.add(classLoader.loadClass(test));
+				// classes.add(classLoader.loadClass(test));
+
+				// Result result = junit.run(classes.toArray(new Class<?>[0]));
+				junit.run(classLoader.loadClass(test)); // classes.toArray(new Class<?>[0]));
+
+				TestResult tr = allResults.retrieveResults();
+
+				score.addResults(tr);
+
+			} catch (ClassNotFoundException | NullPointerException e) {
+				// Log the error
+				System.err.println(e.toString());
+
+				// Add a failed test to the results
+				score.addFailedTest(test,
+						"The test class " + test + " was not found. Check \"Test Summary\" for compilation errors.");
+			} catch (OutOfMemoryError e) {
+				// If there is an out of memory, the gc should have run, but call it again Sam
+				System.gc();
+
+				// Log the error
+				System.out.println(e.toString());
+
+				// Add a failed test to the results
+				score.addFailedTest(e.toString(),
+						baos.toString() + stackTrace(e.getStackTrace(), "myCodeRun.Hello.testIt"));
 			}
-
-			// Result result = junit.run(classes.toArray(new Class<?>[0]));
-			junit.run(classes.toArray(new Class<?>[0]));
-
-			TestResult tr = allResults.retrieveResults();
-
-			score.addResults(tr);
-
-		} catch (ClassNotFoundException | NullPointerException e) {
-			// Log the error
-			System.err.println(e.toString());
-
-			// Add a failed test to the results
-			score.addFailedTest("Could not run test, not found.", null);
-		} catch (OutOfMemoryError e) {
-			// If there is an out of memory, the gc should have run, but call it again Sam
-			System.gc();
-
-			// Log the error
-			System.err.println(e.toString());
-
-			// Add a failed test to the results
-			score.addFailedTest(e.toString(),
-					baos.toString() + stackTrace(e.getStackTrace(), "myCodeRun.Hello.testIt"));
 		}
 
 		// Clear the output and restore the original
