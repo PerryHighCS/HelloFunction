@@ -156,7 +156,6 @@ public class Hello implements RequestStreamHandler {
                 // Retrieve the output as a string
                 System.out.flush();
                 System.setOut(old);
-                System.setIn(in);
                 result += boas.toString();
             } else {
                 result = "Nothing to do";
@@ -167,6 +166,9 @@ public class Hello implements RequestStreamHandler {
             success = false;
         }
 
+        
+        System.setIn(in);
+                
         // Move back to the starting dir
         posix.chdir(startDir);
         System.setProperty("user.dir", startDir);
