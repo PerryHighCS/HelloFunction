@@ -35,21 +35,24 @@ public class CodeRunner {
 
             // Handle exceptions caused by the code being compiled
         } catch (ClassNotFoundException | NullPointerException e) {
-            System.err.println(e.toString());
-            System.err.println(stackTrace(e.getStackTrace(), null));
+            if (System.err != System.out) {
+                System.err.println(e.toString());
+            }
             System.out.println(e.toString());
-            System.out.println(stackTrace(e.getStackTrace(), null));
             System.out.println("Main class: " + mainClass + " not found in source files, could not execute.");
             return false;
         } catch (NoSuchMethodException | IllegalArgumentException e) {
-            System.err.println(e.toString());
+            if (System.err != System.out) {
+                System.err.println(e.toString());
+            }
             System.out.println(e.toString());
-            System.out.println(stackTrace(e.getStackTrace(), null));
             System.out.println("Main class: " + mainClass
                     + " does not contain a \"main\" method, or main method has incorrect parameter list.");
             return false;
         } catch (IllegalAccessException e) {
-            System.err.println(e.toString());
+            if (System.err != System.out) {
+                System.err.println(e.toString());
+            }
             System.err.println(stackTrace(e.getStackTrace(), null));
             System.out.println(e.toString());
             System.out.println(stackTrace(e.getStackTrace(), null));
@@ -64,7 +67,9 @@ public class CodeRunner {
             StackTraceElement[] frames = cause.getStackTrace();
 
             // Show the reason for the exception
-            System.err.println(cause.toString());
+            if (System.err != System.out) {
+                System.err.println(cause.toString());
+            }
             System.out.println(cause.toString());
             System.out.println("Call Stack:");
 
@@ -80,7 +85,9 @@ public class CodeRunner {
             // Display the exception and call stack
             StackTraceElement[] frames = e.getStackTrace();
 
-            System.err.println(e.toString());
+            if (System.err != System.out) {
+                System.err.println(e.toString());
+            }
             System.out.println(e.toString());
             System.out.println("Call Stack:");
             
@@ -109,7 +116,9 @@ public class CodeRunner {
         try {
             classLoader = JavaCodeCompiler.compile(files, null);
         } catch (ClassNotFoundException | NullPointerException e) {
-            System.err.println(e.toString());
+            if (System.err != System.out) {
+                System.err.println(e.toString());
+            }
             System.out.println(e.toString());
             return score;
         }
@@ -149,7 +158,7 @@ public class CodeRunner {
                 System.gc();
 
                 // Log the error
-                System.out.println(e.toString());
+                System.err.println(e.toString());
 
                 // Add a failed test to the results
                 score.addFailedTest(e.toString(),

@@ -12,8 +12,6 @@ import run.myCode.compiler.InMemoryJavaFileObject;
  * @author bdahl
  */
 public class FileManager {
-
-
     /**
      * Create a list of source files from the initial request
      *

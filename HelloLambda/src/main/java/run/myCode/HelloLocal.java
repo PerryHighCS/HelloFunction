@@ -24,7 +24,6 @@ public class HelloLocal extends Hello {
     @Override
     public void handleRequest(InputStream input, OutputStream output, Context context) throws IOException {
 
-        System.out.println("here");
         long startTime = System.nanoTime();
         
         CodeRunner runner = new CodeRunner();
@@ -46,12 +45,15 @@ public class HelloLocal extends Hello {
 
         POSIX posix = POSIXFactory.getJavaPOSIX();
         String workingDir = System.getProperty("java.io.tmpdir");
+        workingDir += System.getProperty("File.separator");
+        workingDir += "HelloLocal" + (int)(Math.random() * Integer.MAX_VALUE);
         String startDir = System.getProperty("user.dir");
 
         // Create and move to a working directory
-        // posix.mkdir(workingDir, 777);
-        // posix.chdir(workingDir);
-        // System.setProperty("user.dir", workingDir);
+        posix.mkdir(workingDir, 777);
+        posix.chdir(workingDir);
+        System.setProperty("user.dir", workingDir);
+        
         if (req != null) {
             CompileRequest cReq = req.getCompileRequest();
             if (cReq != null) {
@@ -158,7 +160,10 @@ public class HelloLocal extends Hello {
         cleanDir(dir);
 
         if (dir.list().length > 0) {
-            System.out.println("Working Directory not emptied.");
+            System.out.println("Working Directory " + workingDir + " not emptied.");
+        }
+        else {
+            dir.delete();
         }
 
         Runtime runtime = Runtime.getRuntime();

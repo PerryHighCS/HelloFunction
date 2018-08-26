@@ -77,7 +77,7 @@ public class JavaCodeCompiler {
 
         options.addAll(Arrays.asList("-classpath",
                 ".:" + System.getProperty("java.class.path")
-                + System.getProperties().getProperty("path.separator")
+                + System.getProperty("path.separator")
                 + "/var/task/lib/junit-4.12.jar"));
         options.addAll(Arrays.asList("-1.8"));
 
