@@ -1,12 +1,10 @@
 //TODO: Add custom securitymanager
 package run.myCode;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,47 +12,40 @@ import java.util.List;
 import javax.tools.JavaFileObject;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jnr.posix.POSIX;
 import jnr.posix.POSIXFactory;
-import static run.myCode.FileManager.*;
+
 import run.myCode.compiler.CodeRunner;
+import static run.myCode.FileManager.*;
 
-public class Hello implements RequestStreamHandler {
-
-    public static final int REQUEST_HANDLER_VERSION = 1;
-    public static final int COMPILE_REQUEST_HANDLER_VERSION = 1;
-    public static final int DATA_HANDLER_VERSION = 1;
-    public static final int RESPONDER_VERSION = 1;
-    public static final long MAX_ZOMBIETIME = 1000000000L * 4;
-
+public class HelloLocal extends Hello {
     @Override
     public void handleRequest(InputStream input, OutputStream output, Context context) throws IOException {
 
+        System.out.println("here");
         long startTime = System.nanoTime();
         
         CodeRunner runner = new CodeRunner();
-
+        
         ObjectMapper mapper = new ObjectMapper();
-        LambdaAPIRequest apiReq = mapper.readValue(input, LambdaAPIRequest.class);
-
-        // System.err.println(System.getProperty("user.dir"));
-        Request req = apiReq.getReqBody();
-
+        Request req = null;
+        
+        try {
+            req = mapper.readValue(input, Request.class);
+        }
+        catch (IOException e) {
+            System.out.println(e);
+            e.printStackTrace();
+        }
+        
         TestResult testResults = null;
         String result = "";
         boolean success;
 
-        // Create a stream to hold system output
-        ByteArrayOutputStream boas = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream(boas);
-        PrintStream old = System.out;
-        System.setOut(ps);
-
         POSIX posix = POSIXFactory.getJavaPOSIX();
-        String workingDir = "/tmp";
+        String workingDir = System.getProperty("java.io.tmpdir");
         String startDir = System.getProperty("user.dir");
 
         // Create and move to a working directory
@@ -68,14 +59,14 @@ public class Hello implements RequestStreamHandler {
                     String msg = "Request version (" + req.getVersion() + ") is > (" + REQUEST_HANDLER_VERSION
                             + ") output may be incorrect.";
                     result += msg;
-                    System.err.println(msg);
+                    System.out.println(msg);
                 }
 
                 if (cReq.getVersion() > COMPILE_REQUEST_HANDLER_VERSION) {
                     String msg = "Compile Request version (" + cReq.getVersion() + ") is > ("
                             + COMPILE_REQUEST_HANDLER_VERSION + ") output may be incorrect.";
                     result += msg;
-                    System.err.println(msg);
+                    System.out.println(msg);
                 }
 
                 DataRequest data = req.getData();
@@ -85,7 +76,7 @@ public class Hello implements RequestStreamHandler {
                         String msg = "Request data version (" + data.getVersion() + ") is > (" + DATA_HANDLER_VERSION
                                 + ") output may be incorrect.";
                         result += msg;
-                        System.err.println(msg);
+                        System.out.println(msg);
                     }
                 }
 
@@ -96,14 +87,15 @@ public class Hello implements RequestStreamHandler {
                     saveData(data);
                     // Compile and run the source files
                     success = runner.runIt(files, cReq.getMainClass());
-
-                } else if (req.getTestType().equalsIgnoreCase("junit")) {
+                }
+                else if (req.getTestType().equalsIgnoreCase("junit")) {
                     saveData(data);
                     TestRequest tReq = req.getTestRequest();
                     testResults = runner.testIt(files, tReq.getTestClasses());
                     success = testResults.getSuccess();
 
-                } else if (req.getTestType().equalsIgnoreCase("zombieland")) {
+                }
+                else if (req.getTestType().equalsIgnoreCase("zombieland")) {
                     // System.err.println("Num threads running: " +
                     // ManagementFactory.getThreadMXBean().getThreadCount());
 
@@ -144,15 +136,10 @@ public class Hello implements RequestStreamHandler {
                     // "Num threads still running: " +
                     // ManagementFactory.getThreadMXBean().getThreadCount());
                 } else {
-                    System.err.println("Nothing to do");
+                    System.out.println("Nothing to do");
                     result += "Nothing to do.";
                     success = false;
                 }
-
-                // Retrieve the output as a string
-                System.out.flush();
-                System.setOut(old);
-                result += boas.toString();
             } else {
                 result = "Nothing to do";
                 success = false;
@@ -171,7 +158,7 @@ public class Hello implements RequestStreamHandler {
         cleanDir(dir);
 
         if (dir.list().length > 0) {
-            System.err.println("Working Directory not emptied.");
+            System.out.println("Working Directory not emptied.");
         }
 
         Runtime runtime = Runtime.getRuntime();
@@ -187,7 +174,7 @@ public class Hello implements RequestStreamHandler {
         sb.append("max memory: ").append(format.format(maxMemory / 1024)).append("\t");
         sb.append("total free memory: ").append(format.format((freeMemory + (maxMemory - allocatedMemory)) / 1024)).append("\t");
         sb.append("request duration: ").append(format.format((System.nanoTime() - startTime) / 1.0e9)).append("sec");
-        System.err.println(sb.toString());
+        System.out.println(sb.toString());
 
         CompileResponse resp = new CompileResponse();
 
@@ -199,7 +186,7 @@ public class Hello implements RequestStreamHandler {
         mapper.writeValue(output, resp);
     }
 
-    public Hello() {
+    public HelloLocal() {
 
     }
 

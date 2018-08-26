@@ -1,5 +1,6 @@
 package run.myCode.compiler;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.net.MalformedURLException;
@@ -18,77 +19,76 @@ import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
 
 public class JavaCodeCompiler {
 
-	/**
-	 * Compile Java source files into memory
-	 * 
-	 * @param files
-	 *            a List of JavaFileObjects containing the source code to compile
-	 * @param options
-	 *            a List of compiler options (null means none)
-	 * @return The compiled main class
-	 * @throws ClassNotFoundException
-	 */
-	public static FromMemoryClassLoader compile(Iterable<? extends JavaFileObject> files, List<String> options)
-			throws ClassNotFoundException {
+    /**
+     * Compile Java source files into memory
+     *
+     * @param files a List of JavaFileObjects containing the source code to
+     * compile
+     * @param options a List of compiler options (null means none)
+     * @return The compiled main class
+     * @throws ClassNotFoundException
+     */
+    public static FromMemoryClassLoader compile(Iterable<? extends JavaFileObject> files, List<String> options)
+            throws ClassNotFoundException {
 
-		// Setup a default list of dependencies, including junit testing
-		URL[] urls = null;
-		try {
-			urls = new URL[] { new URL("file:///var/task/lib/junit-4.12.jar") };
-		} catch (MalformedURLException e) {
-			System.err.println(e);
-		}
+        // Setup a default list of dependencies, including junit testing
+        URL[] urls = null;
+        try {
+            urls = new URL[]{new URL("file:///var/task/lib/junit-4.12.jar")};
+        } catch (MalformedURLException e) {
+            System.err.println(e);
+        }
 
-		final URLClassLoader urlcl = new URLClassLoader(urls, JavaCodeCompiler.class.getClassLoader());
+        final URLClassLoader urlcl = new URLClassLoader(urls, JavaCodeCompiler.class.getClassLoader());
 
-		return compile(files, urlcl, options);
-	}
+        return compile(files, urlcl, options);
+    }
 
-	/**
-	 * Compile Java source files into memory
-	 * 
-	 * @param files
-	 *            a List of JavaFileObjects containing the source code to compile
-	 * @param urlcl
-	 *            a ClassLoader that contains dependencies of the files being
-	 *            compiled
-	 * @param options
-	 *            a List of compiler options (null means none)
-	 * 
-	 * @return The compiled main class
-	 * @throws ClassNotFoundException
-	 */
-	public static FromMemoryClassLoader compile(Iterable<? extends JavaFileObject> files, ClassLoader urlcl,
-			List<String> options) throws ClassNotFoundException {
+    /**
+     * Compile Java source files into memory
+     *
+     * @param files a List of JavaFileObjects containing the source code to
+     * compile
+     * @param urlcl a ClassLoader that contains dependencies of the files being
+     * compiled
+     * @param options a List of compiler options (null means none)
+     *
+     * @return The compiled main class
+     * @throws ClassNotFoundException
+     */
+    public static FromMemoryClassLoader compile(Iterable<? extends JavaFileObject> files, ClassLoader urlcl,
+            List<String> options) throws ClassNotFoundException {
 
-		final FromMemoryClassLoader classLoader = new FromMemoryClassLoader(urlcl);
-		// get system compiler:
-		final JavaCompiler compiler = new EclipseCompiler();
+        final FromMemoryClassLoader classLoader = new FromMemoryClassLoader(urlcl);
+        // get system compiler:
+        final JavaCompiler compiler = new EclipseCompiler();
 
-		// create a diagnostic listener for compilation diagnostic message processing on
-		// compilation WARNING/ERROR
-		final CompileDiagnosticListener diag = new CompileDiagnosticListener();
-		final StandardJavaFileManager stdfileManager = compiler.getStandardFileManager(diag, Locale.ENGLISH, null);
+        // create a diagnostic listener for compilation diagnostic message processing on
+        // compilation WARNING/ERROR
+        final CompileDiagnosticListener diag = new CompileDiagnosticListener();
+        final StandardJavaFileManager stdfileManager = compiler.getStandardFileManager(diag, Locale.ENGLISH, null);
 
-		InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(stdfileManager, classLoader);
+        InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(stdfileManager, classLoader);
 
-		// specify options for compiler
-		if (options == null) {
-			options = new ArrayList<String>();
-		}
+        // specify options for compiler
+        if (options == null) {
+            options = new ArrayList<String>();
+        }
 
-		options.addAll(Arrays.asList("-classpath",
-				".:" + System.getProperty("java.class.path") + ":/var/task/lib/junit-4.12.jar"));
-		options.addAll(Arrays.asList("-1.8"));
+        options.addAll(Arrays.asList("-classpath",
+                ".:" + System.getProperty("java.class.path")
+                + System.getProperties().getProperty("path.separator")
+                + "/var/task/lib/junit-4.12.jar"));
+        options.addAll(Arrays.asList("-1.8"));
 
-		Writer out = new PrintWriter(System.out);
-		JavaCompiler.CompilationTask task = compiler.getTask(out, fileManager, diag, options, null, files);
+        Writer out = new PrintWriter(System.out);
+        JavaCompiler.CompilationTask task = compiler.getTask(out, fileManager, diag, options, null, files);
 
-		boolean result = task.call();
-		// if (result == true) {
-		return classLoader;
-		// }
-		// return null;
-	}
+        boolean result = task.call();
+        // if (result == true) {
+        return classLoader;
+        // }
+        // return null;
+    }
 
 }
