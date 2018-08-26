@@ -173,13 +173,13 @@ public class HelloLocal extends Hello {
         long allocatedMemory = runtime.totalMemory();
 
         // Log memory usage
-        long freeMemory = runtime.freeMemory();
-        sb.append("free memory: ").append(format.format(freeMemory / 1024)).append("\t");
-        sb.append("allocated memory: ").append(format.format(allocatedMemory / 1024)).append("\t");
-        sb.append("max memory: ").append(format.format(maxMemory / 1024)).append("\t");
-        sb.append("total free memory: ").append(format.format((freeMemory + (maxMemory - allocatedMemory)) / 1024)).append("\t");
-        sb.append("request duration: ").append(format.format((System.nanoTime() - startTime) / 1.0e9)).append("sec");
-        System.out.println(sb.toString());
+//        long freeMemory = runtime.freeMemory();
+//        sb.append("free memory: ").append(format.format(freeMemory / 1024)).append("\t");
+//        sb.append("allocated memory: ").append(format.format(allocatedMemory / 1024)).append("\t");
+//        sb.append("max memory: ").append(format.format(maxMemory / 1024)).append("\t");
+//        sb.append("total free memory: ").append(format.format((freeMemory + (maxMemory - allocatedMemory)) / 1024)).append("\t");
+//        sb.append("request duration: ").append(format.format((System.nanoTime() - startTime) / 1.0e9)).append("sec");
+//        System.out.println(sb.toString());
 
         CompileResponse resp = new CompileResponse();
 
