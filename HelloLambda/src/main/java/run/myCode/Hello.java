@@ -16,6 +16,8 @@ import javax.tools.JavaFileObject;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 
 import jnr.posix.POSIX;
 import jnr.posix.POSIXFactory;
@@ -51,8 +53,10 @@ public class Hello implements RequestStreamHandler {
         ByteArrayOutputStream boas = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(boas);
         PrintStream old = System.out;
+        InputStream in = System.in;
+        
         System.setOut(ps);
-
+        System.setIn(new ByteArrayInputStream("\n".getBytes(StandardCharsets.UTF_8)));
         POSIX posix = POSIXFactory.getJavaPOSIX();
         String workingDir = "/tmp";
         String startDir = System.getProperty("user.dir");
@@ -152,6 +156,7 @@ public class Hello implements RequestStreamHandler {
                 // Retrieve the output as a string
                 System.out.flush();
                 System.setOut(old);
+                System.setIn(in);
                 result += boas.toString();
             } else {
                 result = "Nothing to do";
