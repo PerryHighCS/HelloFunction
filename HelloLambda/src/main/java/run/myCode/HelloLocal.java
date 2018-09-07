@@ -181,14 +181,16 @@ public class HelloLocal extends Hello {
 //        sb.append("request duration: ").append(format.format((System.nanoTime() - startTime) / 1.0e9)).append("sec");
 //        System.out.println(sb.toString());
 
-        CompileResponse resp = new CompileResponse();
+        if (output != null) {
+            CompileResponse resp = new CompileResponse();
 
-        resp.setResult(result);
-        resp.setTestResults(testResults);
-        resp.setSucceeded(success);
-        resp.setVersion(RESPONDER_VERSION);
+            resp.setResult(result);
+            resp.setTestResults(testResults);
+            resp.setSucceeded(success);
+            resp.setVersion(RESPONDER_VERSION);
 
-        mapper.writeValue(output, resp);
+            mapper.writeValue(output, resp);
+        }
     }
 
     public HelloLocal() {
