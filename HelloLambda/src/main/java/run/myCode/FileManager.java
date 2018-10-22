@@ -40,10 +40,10 @@ public class FileManager {
         if (data == null) {
             return;
         }
-
+        
         data.getDataFiles().forEach((file) -> {
             File f = (new File(file.getName()));
-
+        
             try (PrintWriter out = new PrintWriter(f.getAbsoluteFile())) {
                 file.getContents().forEach((text) -> {
                     out.println(text);

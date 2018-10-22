@@ -45,7 +45,10 @@ public class HelloLocal extends Hello {
 
         POSIX posix = POSIXFactory.getJavaPOSIX();
         String workingDir = System.getProperty("java.io.tmpdir");
-        workingDir += System.getProperty("File.separator");
+        
+        if (!workingDir.endsWith(System.getProperty("file.separator")))
+            workingDir += System.getProperty("file.separator");
+        
         workingDir += "HelloLocal" + (int)(Math.random() * Integer.MAX_VALUE);
         String startDir = System.getProperty("user.dir");
 
