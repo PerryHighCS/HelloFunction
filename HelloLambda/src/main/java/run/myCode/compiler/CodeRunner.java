@@ -167,7 +167,9 @@ public class CodeRunner {
         });
 
         // Clear the output and restore the original
-        System.out.flush();
+        if (System.out != null) 
+            System.out.flush();
+   
         System.setOut(old);
 
         return score;
