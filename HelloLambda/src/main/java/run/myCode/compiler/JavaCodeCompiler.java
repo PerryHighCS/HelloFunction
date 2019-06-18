@@ -1,15 +1,16 @@
 package run.myCode.compiler;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -31,17 +32,7 @@ public class JavaCodeCompiler {
     public static FromMemoryClassLoader compile(Iterable<? extends JavaFileObject> files, List<String> options)
             throws ClassNotFoundException {
 
-        // Setup a default list of dependencies, including junit testing
-        URL[] urls = null;
-        try {
-            urls = new URL[]{new URL("file:///var/task/lib/junit-4.12.jar")};
-        } catch (MalformedURLException e) {
-            System.err.println(e);
-        }
-
-        final URLClassLoader urlcl = new URLClassLoader(urls, JavaCodeCompiler.class.getClassLoader());
-
-        return compile(files, urlcl, options);
+        return compile(files, JavaCodeCompiler.class.getClassLoader(), options);
     }
 
     /**
@@ -72,13 +63,30 @@ public class JavaCodeCompiler {
 
         // specify options for compiler
         if (options == null) {
-            options = new ArrayList<String>();
+            options = new ArrayList<>();
         }
 
+        StringBuilder classpathBuilder = 
+                new StringBuilder("." 
+                    + System.getProperty("path.separator") 
+                    + System.getProperty("java.class.path"));
+
+        try {
+            Files.list(new File("/var/task/lib/").toPath())
+                    .filter(s -> s.toString().endsWith(".jar") || s.toString().endsWith(".JAR"))
+                    .forEach(f -> {
+                        classpathBuilder.append(System.getProperty("path.separator"));
+                        classpathBuilder.append(f.toString());
+                     });
+        } catch (IOException ex) {
+            Logger.getLogger(JavaCodeCompiler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        String classpath = classpathBuilder.toString();
+        System.out.println(">> " + classpath + " <<");
+        
         options.addAll(Arrays.asList("-classpath",
-                ".:" + System.getProperty("java.class.path")
-                + System.getProperty("path.separator")
-                + "/var/task/lib/junit-4.12.jar"));
+                classpath));
         options.addAll(Arrays.asList("-1.8"));
 
         Writer out = new PrintWriter(System.out);

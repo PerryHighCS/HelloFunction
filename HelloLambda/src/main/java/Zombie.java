@@ -31,6 +31,8 @@ public abstract class Zombie extends Actor {
      * Make a new zombie, you evil person.
      */
     public Zombie() {
+        actions = new ArrayBlockingQueue<>(1);
+         
         thinker = new Thread(() -> {
             Thread thisThread = Thread.currentThread();
             // Wait until the zombie is in a world
@@ -88,7 +90,7 @@ public abstract class Zombie extends Actor {
             // Start the plan thread on the first cycle
             thinker.start();
         } else {
-            // Perfom the next action
+            // Perform the next action
             Runnable nextAction = actions.poll();
 
             if (nextAction != null && stillTrying()) {
