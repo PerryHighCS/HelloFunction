@@ -11,361 +11,355 @@ import java.util.Map;
  * A headless reimplementation of the Greenfoot Actor class
  */
 public abstract class Actor {
-	private int xPos;
-	private int yPos;
-	private int dir;
-	private World world;
 
-	protected static Map<String, Image> imgs = new HashMap<>();
+    private int xPos;
+    private int yPos;
+    private int dir;
+    private World world;
 
-	public Actor() {
-		this.xPos = 0;
-		this.yPos = 0;
-		this.dir = 0;
-	}
+    protected static Map<String, Image> imgs = new HashMap<>();
 
-	public abstract void act();
+    public Actor() {
+        this.xPos = 0;
+        this.yPos = 0;
+        this.dir = 0;
+    }
 
-	/**
-	 * Add this actor to a world, at a given location in that world
-	 * 
-	 * @param newWorld
-	 * @param x
-	 * @param y
-	 */
-	public void addToWorld(World newWorld, int x, int y) {
-		// if the actor is already in a world, remove it
-		if (world != null) {
-			world.removeObject(this);
-		}
+    public abstract void act();
 
-		this.world = newWorld;
-		this.setX(x);
-		this.setY(y);
-	}
+    /**
+     * Add this actor to a world, at a given location in that world
+     *
+     * @param newWorld
+     * @param x
+     * @param y
+     */
+    public void addToWorld(World newWorld, int x, int y) {
+        // if the actor is already in a world, remove it
+        if (world != null) {
+            world.removeObject(this);
+        }
 
-	/**
-	 * Get the world this actor inhabits
-	 * 
-	 * @return
-	 */
-	public World getWorld() {
-		return this.world;
-	}
+        this.world = newWorld;
+        this.setX(x);
+        this.setY(y);
+    }
 
-	/**
-	 * Move this actor to a given x coordinate
-	 * 
-	 * @param newX
-	 */
-	public void setX(int newX) {
-		this.xPos = world.constrainX(newX);
-	}
+    /**
+     * Get the world this actor inhabits
+     *
+     * @return
+     */
+    public World getWorld() {
+        return this.world;
+    }
 
-	/**
-	 * Move this actor to a given y coordinate
-	 * 
-	 * @param newY
-	 */
-	public void setY(int newY) {
-		this.yPos = world.constrainY(newY);
-	}
+    /**
+     * Move this actor to a given x coordinate
+     *
+     * @param newX
+     */
+    public void setX(int newX) {
+        this.xPos = world.constrainX(newX);
+    }
 
-	/**
-	 * Determine this actor's current X coordinate
-	 * 
-	 * @return
-	 */
-	public int getX() {
-		return this.xPos;
-	}
+    /**
+     * Move this actor to a given y coordinate
+     *
+     * @param newY
+     */
+    public void setY(int newY) {
+        this.yPos = world.constrainY(newY);
+    }
 
-	/**
-	 * Determine this actor's current Y coordinate
-	 * 
-	 * @return
-	 */
-	public int getY() {
-		return this.yPos;
-	}
+    /**
+     * Determine this actor's current X coordinate
+     *
+     * @return
+     */
+    public int getX() {
+        return this.xPos;
+    }
 
-	/**
-	 * Move this actor forward a given distance
-	 * 
-	 * @param distance
-	 */
-	public void move(int distance) {
-		double radians = Math.toRadians(this.dir);
+    /**
+     * Determine this actor's current Y coordinate
+     *
+     * @return
+     */
+    public int getY() {
+        return this.yPos;
+    }
 
-		// We round to the nearest integer, to allow moving one unit at an angle
-		// to actually move.
-		int dx = (int) Math.round(Math.cos(radians) * distance);
-		int dy = (int) Math.round(Math.sin(radians) * distance);
-		setLocation(this.xPos + dx, this.yPos + dy);
-	}
+    /**
+     * Move this actor forward a given distance
+     *
+     * @param distance
+     */
+    public void move(int distance) {
+        double radians = Math.toRadians(this.dir);
 
-	/**
-	 * Move this actor to a given location
-	 * 
-	 * @param x
-	 * @param y
-	 */
-	public void setLocation(int x, int y) {
-		this.setX(x);
-		this.setY(y);
-	}
+        // We round to the nearest integer, to allow moving one unit at an angle
+        // to actually move.
+        int dx = (int) Math.round(Math.cos(radians) * distance);
+        int dy = (int) Math.round(Math.sin(radians) * distance);
+        setLocation(this.xPos + dx, this.yPos + dy);
+    }
 
-	/**
-	 * Turn this actor to face a given direction in degrees (0 deg is east, 90 is
-	 * south)
-	 * 
-	 * @param rotation
-	 */
-	public void setRotation(int rotation) {
-		// First normalize
-		if (rotation >= 360) {
-			// Optimize the usual case: rotation has adjusted to a value greater than
-			// 360, but is still within the 360 - 720 bound.
-			if (rotation < 720) {
-				rotation -= 360;
-			} else {
-				rotation = rotation % 360;
-			}
-		} else if (rotation < 0) {
-			// Likwise, if less than 0, it's likely that the rotation was reduced by
-			// a small amount and so will be >= -360.
-			if (rotation >= -360) {
-				rotation += 360;
-			} else {
-				rotation = 360 + (rotation % 360);
-			}
-		}
+    /**
+     * Move this actor to a given location
+     *
+     * @param x
+     * @param y
+     */
+    public void setLocation(int x, int y) {
+        this.setX(x);
+        this.setY(y);
+    }
 
-		dir = rotation;
-	}
+    /**
+     * Turn this actor to face a given direction in degrees (0 deg is east, 90
+     * is south)
+     *
+     * @param rotation
+     */
+    public void setRotation(int rotation) {
+        // First normalize
+        if (rotation >= 360) {
+            // Optimize the usual case: rotation has adjusted to a value greater than
+            // 360, but is still within the 360 - 720 bound.
+            if (rotation < 720) {
+                rotation -= 360;
+            } else {
+                rotation = rotation % 360;
+            }
+        } else if (rotation < 0) {
+            // Likwise, if less than 0, it's likely that the rotation was reduced by
+            // a small amount and so will be >= -360.
+            if (rotation >= -360) {
+                rotation += 360;
+            } else {
+                rotation = 360 + (rotation % 360);
+            }
+        }
 
-	/**
-	 * Determine this actor's heading
-	 * 
-	 * @return The direction this actor is facing, in degrees (0 deg is east, 90 is
-	 *         south)
-	 */
-	public int getRotation() {
-		return dir;
-	}
+        dir = rotation;
+    }
 
-	/**
-	 * Turn a given number of degrees to the right (clockwise)
-	 * 
-	 * @param amount
-	 */
-	public void turn(int amount) {
-		this.setRotation(this.dir + amount);
-	}
+    /**
+     * Determine this actor's heading
+     *
+     * @return The direction this actor is facing, in degrees (0 deg is east, 90
+     * is south)
+     */
+    public int getRotation() {
+        return dir;
+    }
 
-	/**
-	 * Turn to face a given location
-	 * 
-	 * @param x
-	 * @param y
-	 */
-	public void turnTowards(int x, int y) {
-		double a = Math.atan2(y - this.yPos, x - this.xPos);
-		this.setRotation((int) Math.toDegrees(a));
-	}
+    /**
+     * Turn a given number of degrees to the right (clockwise)
+     *
+     * @param amount
+     */
+    public void turn(int amount) {
+        this.setRotation(this.dir + amount);
+    }
 
-	/**
-	 * Get any objects of a given type touching this actor
-	 * 
-	 * @param <A>
-	 * @param cls
-	 *            - the type of object to look for (null for any)
-	 * @return
-	 */
-	protected <A> List<A> getIntersectingObjects(Class<A> cls) {
-		List<A> actors = world.getObjectsAt(xPos, yPos, cls);
-		actors.remove(this);
-		return actors;
-	}
+    /**
+     * Turn to face a given location
+     *
+     * @param x
+     * @param y
+     */
+    public void turnTowards(int x, int y) {
+        double a = Math.atan2(y - this.yPos, x - this.xPos);
+        this.setRotation((int) Math.toDegrees(a));
+    }
 
-	/**
-	 * Get one object of a given type touching this actor
-	 * 
-	 * @param <A>
-	 * 
-	 * @param cls
-	 *            - the type of object to look for (null for any)
-	 * @return null when no object is detected
-	 */
-	protected <A> Actor getOneIntersectingObject(Class<A> cls) {
-		List<A> actors = world.getObjectsAt(xPos, yPos, cls);
-		if (actors.size() > 0) {
-			return (Actor) actors.get(0);
-		} else {
-			return null;
-		}
-	}
+    /**
+     * Get any objects of a given type touching this actor
+     *
+     * @param <A>
+     * @param cls - the type of object to look for (null for any)
+     * @return
+     */
+    protected <A> List<A> getIntersectingObjects(Class<A> cls) {
+        List<A> actors = world.getObjectsAt(xPos, yPos, cls);
+        actors.remove(this);
+        return actors;
+    }
 
-	/**
-	 * Get the actors within a given horizontal and vertical distance from this
-	 * actor. Searches a square or plus shaped area 2*distance across centered on
-	 * this actor.
-	 * 
-	 * @param <A>
-	 * @param distance
-	 * @param diagonal
-	 *            true includes all cells in the square centered on this actor
-	 * @param cls
-	 *            The type of object to look for (null for any)
-	 * @return
-	 */
-	protected <A> List<A> getNeighbours(int distance, boolean diagonal, Class<A> cls) {
-		List<A> objects = new ArrayList<>();
+    /**
+     * Get one object of a given type touching this actor
+     *
+     * @param <A>
+     *
+     * @param cls - the type of object to look for (null for any)
+     * @return null when no object is detected
+     */
+    protected <A> Actor getOneIntersectingObject(Class<A> cls) {
+        List<A> actors = world.getObjectsAt(xPos, yPos, cls);
+        if (actors.size() > 0) {
+            return (Actor) actors.get(0);
+        } else {
+            return null;
+        }
+    }
 
-		int minX = world.constrainX(xPos - distance);
-		int maxX = world.constrainX(xPos + distance);
-		int minY = world.constrainY(yPos - distance);
-		int maxY = world.constrainY(yPos + distance);
-		for (int x = minX; x <= maxX; x++) {
-			for (int y = minY; y <= maxY; y++) {
-				// If not diagonal, only check cells horizontally or vertically
-				// aligned with the actor's cell
-				if (!diagonal && (x != xPos && y != yPos)) {
-					continue;
-				}
+    /**
+     * Get the actors within a given horizontal and vertical distance from this
+     * actor. Searches a square or plus shaped area 2*distance across centered
+     * on this actor.
+     *
+     * @param <A>
+     * @param distance
+     * @param diagonal true includes all cells in the square centered on this
+     * actor
+     * @param cls The type of object to look for (null for any)
+     * @return
+     */
+    protected <A> List<A> getNeighbours(int distance, boolean diagonal, Class<A> cls) {
+        List<A> objects = new ArrayList<>();
 
-				objects.addAll(world.getObjectsAt(x, y, cls));
-			}
-		}
+        int minX = world.constrainX(xPos - distance);
+        int maxX = world.constrainX(xPos + distance);
+        int minY = world.constrainY(yPos - distance);
+        int maxY = world.constrainY(yPos + distance);
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                // If not diagonal, only check cells horizontally or vertically
+                // aligned with the actor's cell
+                if (!diagonal && (x != xPos && y != yPos)) {
+                    continue;
+                }
 
-		objects.remove(this);
+                objects.addAll(world.getObjectsAt(x, y, cls));
+            }
+        }
 
-		return objects;
-	}
+        objects.remove(this);
 
-	/**
-	 * Get all of the objects in a cell dx, dy away from this actor's location
-	 * 
-	 * @param <A>
-	 * @param dx
-	 * @param dy
-	 * @param cls
-	 *            The type of objects to look for (null for any)
-	 * @return
-	 */
-	protected <A> List<A> getObjectsAtOffset(int dx, int dy, Class<A> cls) {
-		return world.getObjectsAt(xPos + dx, yPos + dy, cls);
-	}
+        return objects;
+    }
 
-	/**
-	 * Get one object in a cell dx, dy awat from this actor's location
-	 * 
-	 * @param <A>
-	 * 
-	 * @param dx
-	 * @param dy
-	 * @param cls
-	 *            The type of object to look for (null for any)
-	 * @return null when no object is detected
-	 */
-	protected <A> Actor getOneObjectAtOffset(int dx, int dy, Class<A> cls) {
-		List<A> objects = world.getObjectsAt(xPos + dx, yPos + dy, cls);
-		if (objects.size() > 0) {
-			return (Actor) objects.get(0);
-		} else {
-			return null;
-		}
-	}
+    /**
+     * Get all of the objects in a cell dx, dy away from this actor's location
+     *
+     * @param <A>
+     * @param dx
+     * @param dy
+     * @param cls The type of objects to look for (null for any)
+     * @return
+     */
+    protected <A> List<A> getObjectsAtOffset(int dx, int dy, Class<A> cls) {
+        return world.getObjectsAt(xPos + dx, yPos + dy, cls);
+    }
 
-	/**
-	 * Get all objects within a given radius of this actor
-	 * 
-	 * @param <A>
-	 * @param radius
-	 * @param cls
-	 * @return
-	 */
-	protected <A> List<A> getObjectsInRange(int radius, Class<A> cls) {
-		List<A> objects = getNeighbours(radius, true, cls);
+    /**
+     * Get one object in a cell dx, dy awat from this actor's location
+     *
+     * @param <A>
+     *
+     * @param dx
+     * @param dy
+     * @param cls The type of object to look for (null for any)
+     * @return null when no object is detected
+     */
+    protected <A> Actor getOneObjectAtOffset(int dx, int dy, Class<A> cls) {
+        List<A> objects = world.getObjectsAt(xPos + dx, yPos + dy, cls);
+        if (objects.size() > 0) {
+            return (Actor) objects.get(0);
+        } else {
+            return null;
+        }
+    }
 
-		for (int i = objects.size() - 1; i >= 0; i++) {
-			Actor a = (Actor) objects.get(i);
-			int aX = a.getX();
-			int aY = a.getY();
+    /**
+     * Get all objects within a given radius of this actor
+     *
+     * @param <A>
+     * @param radius
+     * @param cls
+     * @return
+     */
+    protected <A> List<A> getObjectsInRange(int radius, Class<A> cls) {
+        List<A> objects = getNeighbours(radius, true, cls);
 
-			if (Math.sqrt(Math.pow(xPos - aX, 2) + Math.pow(yPos - aY, 2)) > radius) {
-				objects.remove(a);
-			}
-		}
+        for (int i = objects.size() - 1; i >= 0; i++) {
+            Actor a = (Actor) objects.get(i);
+            int aX = a.getX();
+            int aY = a.getY();
 
-		return objects;
-	}
+            if (Math.sqrt(Math.pow(xPos - aX, 2) + Math.pow(yPos - aY, 2)) > radius) {
+                objects.remove(a);
+            }
+        }
 
-	/**
-	 * Determine if this object is touching another object
-	 * 
-	 * @param cls
-	 *            the type of object to search for (null for any)
-	 * @return
-	 */
-	protected boolean isTouching(Class<?> cls) {
-		return getIntersectingObjects(cls).size() > 0;
-	}
+        return objects;
+    }
 
-	/**
-	 * Remove all objects of a given type touching the actor
-	 * 
-	 * @param cls
-	 *            the type of object to remove (null for any)
-	 */
-	protected void removeTouching(Class<?> cls) {
-		getIntersectingObjects(cls).forEach(a -> world.removeObject((Actor) a));
-	}
+    /**
+     * Determine if this object is touching another object
+     *
+     * @param cls the type of object to search for (null for any)
+     * @return
+     */
+    protected boolean isTouching(Class<?> cls) {
+        return getIntersectingObjects(cls).size() > 0;
+    }
 
-	/**
-	 * Determine if this actor is at the same location as another
-	 * 
-	 * @param other
-	 * @return
-	 */
-	protected boolean intersects(Actor other) {
-		return (this.xPos == other.xPos && this.yPos == other.yPos);
-	}
+    /**
+     * Remove all objects of a given type touching the actor
+     *
+     * @param cls the type of object to remove (null for any)
+     */
+    protected void removeTouching(Class<?> cls) {
+        getIntersectingObjects(cls).forEach(a -> world.removeObject((Actor) a));
+    }
 
-	/**
-	 * Determine if the actor has reached the edge of the world
-	 * 
-	 * @return
-	 */
-	public boolean isAtEdge() {
-		return (this.xPos == 0 || this.xPos == world.getWidth() - 1 || this.yPos == 0
-				|| this.yPos == world.getHeight() - 1);
-	}
+    /**
+     * Determine if this actor is at the same location as another
+     *
+     * @param other
+     * @return
+     */
+    protected boolean intersects(Actor other) {
+        return (this.xPos == other.xPos && this.yPos == other.yPos);
+    }
 
-	/**
-	 * Get this actor's sprite image
-	 * 
-	 * @return
-	 */
-	public Image getImage() {
-		String spriteName = this.getClass().getSimpleName();
+    /**
+     * Determine if the actor has reached the edge of the world
+     *
+     * @return
+     */
+    public boolean isAtEdge() {
+        return (this.xPos == 0 || this.xPos == world.getWidth() - 1 || this.yPos == 0
+                || this.yPos == world.getHeight() - 1);
+    }
 
-		Image sprite = imgs.get(spriteName);
-		if (sprite == null) {
-			sprite = loadSprite(spriteName, null);
-			imgs.put(spriteName, sprite);
-		}
-		return sprite;
-	}
+    /**
+     * Get this actor's sprite image
+     *
+     * @return
+     */
+    public Image getImage() {
+        String spriteName = this.getClass().getSimpleName();
 
-	/**
-	 * Load a sprite from the world's resources
-	 * 
-	 * @param name
-	 * @param failFill
-	 * @return
-	 */
-	protected Image loadSprite(String name, Color failFill) {
-		return world.loadSprite(name, Color.red);
-	}
+        Image sprite = imgs.get(spriteName);
+        if (sprite == null) {
+            sprite = loadSprite(spriteName, null);
+            imgs.put(spriteName, sprite);
+        }
+        return sprite;
+    }
+
+    /**
+     * Load a sprite from the world's resources
+     *
+     * @param name
+     * @param failFill
+     * @return
+     */
+    protected Image loadSprite(String name, Color failFill) {
+        return world.loadSprite(name, Color.red);
+    }
 }
