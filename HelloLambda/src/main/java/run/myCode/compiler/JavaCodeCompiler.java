@@ -83,8 +83,8 @@ public class JavaCodeCompiler {
         }
 
         String classpath = classpathBuilder.toString();
-        System.out.println(">> " + classpath + " <<");
-        
+//        System.out.println(">> " + classpath + " <<");
+
         options.addAll(Arrays.asList("-classpath",
                 classpath));
         options.addAll(Arrays.asList("-1.8"));
