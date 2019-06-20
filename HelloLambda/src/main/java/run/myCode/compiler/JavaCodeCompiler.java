@@ -44,7 +44,8 @@ public class JavaCodeCompiler {
      * compiled
      * @param options a List of compiler options (null means none)
      *
-     * @return The compiled main class
+     * @return A classloader containing the compiled classes and their dependencies
+     * 
      * @throws ClassNotFoundException
      */
     public static FromMemoryClassLoader compile(Iterable<? extends JavaFileObject> files, ClassLoader urlcl,
@@ -66,11 +67,13 @@ public class JavaCodeCompiler {
             options = new ArrayList<>();
         }
 
+        // Build the classpath from the current folder and the system classpath
         StringBuilder classpathBuilder = 
                 new StringBuilder("." 
                     + System.getProperty("path.separator") 
                     + System.getProperty("java.class.path"));
 
+        // Add any included jar files from the lib folder to the classpath (wildcard isn't working)
         try {
             Files.list(new File("/var/task/lib/").toPath())
                     .filter(s -> s.toString().endsWith(".jar") || s.toString().endsWith(".JAR"))
@@ -85,18 +88,19 @@ public class JavaCodeCompiler {
         String classpath = classpathBuilder.toString();
 //        System.out.println(">> " + classpath + " <<");
 
+        // Set the classpath and java version for the compiler
         options.addAll(Arrays.asList("-classpath",
                 classpath));
         options.addAll(Arrays.asList("-1.8"));
 
         Writer out = new PrintWriter(System.out);
+        
+        // Compile the code
         JavaCompiler.CompilationTask task = compiler.getTask(out, fileManager, diag, options, null, files);
-
         boolean result = task.call();
-        // if (result == true) {
+        
+        // Return the classloader containing the compiled classes
         return classLoader;
-        // }
-        // return null;
     }
 
 }
