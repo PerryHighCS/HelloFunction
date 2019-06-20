@@ -9,7 +9,7 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 
 @SuppressWarnings("unused")
-class MemoryByteCode extends SimpleJavaFileObject {   
+public class MemoryByteCode extends SimpleJavaFileObject {   
 	private ByteArrayOutputStream baos;   
 	public MemoryByteCode(String name) {       
 		super(URI.create("byte:///" + name + ".class"), Kind.CLASS);   
