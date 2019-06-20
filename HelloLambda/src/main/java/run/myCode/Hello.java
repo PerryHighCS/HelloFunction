@@ -49,7 +49,7 @@ public class Hello implements RequestStreamHandler {
         String result = "";
         boolean success;
 
-        // Create a stream to hold system output
+        // Create a stream to hold system output for reporting back with the result
         ByteArrayOutputStream boas = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(boas);
         PrintStream old = System.out;
@@ -57,6 +57,8 @@ public class Hello implements RequestStreamHandler {
         
         System.setOut(ps);
         System.setIn(new ByteArrayInputStream("\n".getBytes(StandardCharsets.UTF_8)));
+        
+        // Set the working directory for data files
         POSIX posix = POSIXFactory.getJavaPOSIX();
         String workingDir = "/tmp";
         String startDir = System.getProperty("user.dir");
@@ -65,6 +67,8 @@ public class Hello implements RequestStreamHandler {
         // posix.mkdir(workingDir, 777);
         // posix.chdir(workingDir);
         // System.setProperty("user.dir", workingDir);
+        
+        // Finally... handle the request
         if (req != null) {
             CompileRequest cReq = req.getCompileRequest();
             if (cReq != null) {
@@ -96,6 +100,7 @@ public class Hello implements RequestStreamHandler {
                 // Construct in-memory java source files from the request dynamic code
                 final Iterable<? extends JavaFileObject> files = createSourceFileObjects(cReq);
 
+                // Execute the appropriate compile/run request
                 if (req.getTestType().equalsIgnoreCase("run")) {
                     saveData(data);
                     // Compile and run the source files
@@ -104,6 +109,8 @@ public class Hello implements RequestStreamHandler {
                 } else if (req.getTestType().equalsIgnoreCase("junit")) {
                     saveData(data);
                     TestRequest tReq = req.getTestRequest();
+                    
+                    // Compile and test the source files
                     testResults = runner.testIt(files, tReq.getTestClasses());
                     success = testResults.getSuccess();
 
@@ -127,6 +134,7 @@ public class Hello implements RequestStreamHandler {
 
                     List<String> scenarios = new ArrayList<>();
                     
+                    // If there are data files they will be scenarios to test
                     if (data != null) {
                         for (DataRequest.DataFile file : data.getDataFiles()) {
                             String scenario = "";
@@ -139,6 +147,8 @@ public class Hello implements RequestStreamHandler {
                     
                     // long prep = System.nanoTime() - startTime;
                     // System.err.printf("Zombie prep time: %.2f\n", prep / 1.0e9);
+                    
+                    // Compile and test MyZombie.java in all the scenarios
                     testResults = runner.zombieDo(myZombieSource, scenarios);
                     success = testResults.getSuccess();
 
