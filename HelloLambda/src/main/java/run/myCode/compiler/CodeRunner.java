@@ -32,16 +32,18 @@ public class CodeRunner {
             compiledClass.getMethod("main", String[].class).invoke(null, new Object[]{null});
             compiledClass = null;
             classLoader = null;
-
+        }
+        catch (ClassNotFoundException | NullPointerException e) {
             // Handle exceptions caused by the code being compiled
-        } catch (ClassNotFoundException | NullPointerException e) {
             if (System.err != System.out) {
                 System.err.println(e.toString());
             }
             System.out.println(e.toString());
             System.out.println("Main class: " + mainClass + " not found in source files, could not execute.");
             return false;
-        } catch (NoSuchMethodException | IllegalArgumentException e) {
+        }
+        catch (NoSuchMethodException | IllegalArgumentException e) {
+            // Handle exceptions caused by an incorrect main method
             if (System.err != System.out) {
                 System.err.println(e.toString());
             }
@@ -49,7 +51,9 @@ public class CodeRunner {
             System.out.println("Main class: " + mainClass
                     + " does not contain a \"main\" method, or main method has incorrect parameter list.");
             return false;
-        } catch (IllegalAccessException e) {
+        }
+        catch (IllegalAccessException e) {
+            // Handle exceptions caused by incorrect visibility on main method
             if (System.err != System.out) {
                 System.err.println(e.toString());
             }
@@ -58,7 +62,9 @@ public class CodeRunner {
             System.out.println(stackTrace(e.getStackTrace(), null));
             System.out.println("Main class: " + mainClass + " \"main\" method is inaccessable.  Is it \"public\"?");
             return false;
-        } catch (InvocationTargetException e) {
+        }
+        catch (InvocationTargetException e) {
+            // Handle exceptions caused inside of the main method
             Throwable cause = e.getCause();
             if (cause == null) {
                 cause = e;
@@ -78,7 +84,8 @@ public class CodeRunner {
             System.out.println(stackTrace(frames, this.getClass().getCanonicalName()  + ".runIt"));
 
             return false;
-        } catch (OutOfMemoryError | SecurityException | ExceptionInInitializerError e) {
+        }
+        catch (OutOfMemoryError | SecurityException | ExceptionInInitializerError e) {
             // If there is an out of memory, the gc should have run, but call it again Sam
             System.gc();
 
@@ -111,11 +118,13 @@ public class CodeRunner {
         TestResult score = new TestResult();
 
         FromMemoryClassLoader classLoader;
-
-        // Compile the source files using the JavaCompiler
+        
         try {
+            // Compile the source files using the JavaCompiler
             classLoader = JavaCodeCompiler.compile(files, null);
-        } catch (ClassNotFoundException | NullPointerException e) {
+        } 
+        catch (ClassNotFoundException | NullPointerException e) {
+            // If compiling caused an exception, fail
             if (System.err != System.out) {
                 System.err.println(e.toString());
             }
@@ -136,18 +145,15 @@ public class CodeRunner {
         // Have JUnit run the test classes specified
         tests.forEach((test) -> {
             try {
-                // List<Class<?>> classes = new ArrayList<Class<?>>();
+                // Run the test
+                junit.run(classLoader.loadClass(test));
 
-                // classes.add(classLoader.loadClass(test));
-                // Result result = junit.run(classes.toArray(new Class<?>[0]));
-                junit.run(classLoader.loadClass(test)); // classes.toArray(new Class<?>[0]));
-
+                // Store the results from the test
                 TestResult tr = allResults.retrieveResults();
-
                 score.addResults(tr);
-
-            } catch (ClassNotFoundException | NullPointerException e) {
-                // Log the error
+            } 
+            catch (ClassNotFoundException | NullPointerException e) {
+                // If the test caused an error, Log the error
                 System.err.println(e.toString());
 
                 // Add a failed test to the results
@@ -175,6 +181,14 @@ public class CodeRunner {
         return score;
     }
 
+    /**
+     * Compile and run ZombieLand code
+     * 
+     * @param myZombieSource the MyZombie.java source file
+     * @param scenarios a list of the XML descriptions of the scenarios to test
+     * 
+     * @return the results of the test
+     */
     public ZombieResult zombieDo(String myZombieSource, List<String> scenarios) {
         ZombieResult res = new ZombieResult();
 
@@ -203,9 +217,11 @@ public class CodeRunner {
             return badZombie("Zombie not know -");
         }
 
+        // Compile and run the scenarios
         List<zss.Tester.Result> zr = ZombieLandTester.doScenario(scenarios.toArray(new String[0]), myZombieSource,
                 MAX_ZOMBIETIME);
 
+        // Extract and save the results from each scenario
         zr.forEach(r -> {
             ZombieResult.ScenarioResult scenarioCase = new ZombieResult.ScenarioResult();
             scenarioCase.setDescription(r.message());
@@ -220,6 +236,12 @@ public class CodeRunner {
         return res;
     }
 
+    /**
+     * Create an error result for bad zombieland code
+     * @param message The message to report
+     * 
+     * @return a failure result
+     */
     private static ZombieResult badZombie(String message) {
         ZombieResult res = new ZombieResult();
 
@@ -237,20 +259,31 @@ public class CodeRunner {
         return res;
     }
 
+    /**
+     * Create a stack trace containing information from the top of the stack
+     * down to (not including) the class.method stackBottom
+     * 
+     * @param frames the frames of the stack trace
+     * @param stackBottom the "class.method" below which nothing should be
+     * included in the trace
+     * 
+     * @return A string representation of the stack down to (but not including)
+     * the stackBottom
+     */
     private static String stackTrace(StackTraceElement[] frames, String stackBottom) {
-        String trace = "";
+        StringBuilder trace = new StringBuilder("");
 
         // Add the stack frames to the trace until the method "stackBottom" is reached
         for (StackTraceElement frame : frames) {
             if (!(frame.getClassName() + "." + frame.getMethodName()).equals(stackBottom)) {
-                trace += "\t";
-                trace += frame.toString();
-                trace += "\n";
+                trace.append("\t");
+                trace.append(frame.toString());
+                trace.append("\n");
             } else {
                 break;
             }
         }
-        return trace;
+        return trace.toString();
     }
 
 }
