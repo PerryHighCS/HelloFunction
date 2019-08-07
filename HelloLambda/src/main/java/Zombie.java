@@ -388,6 +388,15 @@ public abstract class Zombie extends Actor {
             }
         });
     }
+    
+    /**
+     * This Zombie has reached its goal in afterlife!
+     */
+    final void winNow() {
+        if (!won) {
+            won = true;
+        }
+    }
 
     /**
      * Check if this zombie has accomplished everything it could hope for.

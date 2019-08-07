@@ -18,6 +18,6 @@ public class ZombieGoal extends ZombieDetector {
      */
     @Override
     public void detected() {
-        getIntersectingObjects(Zombie.class).forEach((z) -> z.win());
+        getIntersectingObjects(Zombie.class).forEach((z) -> z.winNow());
     }
 }
