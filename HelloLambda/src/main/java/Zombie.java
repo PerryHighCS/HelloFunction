@@ -382,9 +382,11 @@ public abstract class Zombie extends Actor {
      * This Zombie has reached its goal in afterlife!
      */
     public final void win() {
-        if (!won) {
-            won = true;
-        }
+        nextAction(() -> {
+            if (!won) {
+                won = true;
+            }
+        });
     }
 
     /**

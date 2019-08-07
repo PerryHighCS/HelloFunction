@@ -452,7 +452,7 @@ public class ZombieLand extends World {
                                 if (!rval.equals(methodCall[1])) {
                                     hasCalls = false;
                                 }
-                            } catch (Exception e) {
+                            } catch (Exception e) { // catch all exceptions (checked and unchecked) in method calls
                                 e.printStackTrace();
                             }
                         }
