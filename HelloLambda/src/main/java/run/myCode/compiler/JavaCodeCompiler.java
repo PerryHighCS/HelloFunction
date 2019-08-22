@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -81,7 +82,12 @@ public class JavaCodeCompiler {
                         classpathBuilder.append(System.getProperty("path.separator"));
                         classpathBuilder.append(f.toString());
                      });
-        } catch (IOException ex) {
+        } 
+        catch (NoSuchFileException ex) {
+            // if the /var/task/lib folder doesn't exist, no problem.
+            //Logger.getLogger(JavaCodeCompiler.class.getName()).log(Level.INFO, null, ex);
+        }
+        catch (IOException ex) {
             Logger.getLogger(JavaCodeCompiler.class.getName()).log(Level.SEVERE, null, ex);
         }
 
