@@ -58,11 +58,13 @@ public class FileManager {
     public static void cleanDir(File dir) {
         File[] dirfiles = dir.listFiles();
 
-        for (File f : dirfiles) {
-            if (f.isDirectory()) {
-                cleanDir(f);
+        if (dirfiles != null) {
+            for (File f : dirfiles) {
+                if (f.isDirectory()) {
+                    cleanDir(f);
+                }
+                f.delete();
             }
-            f.delete();
         }
     }    
 }

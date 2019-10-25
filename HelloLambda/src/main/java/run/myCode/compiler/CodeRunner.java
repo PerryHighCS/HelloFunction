@@ -23,7 +23,7 @@ public class CodeRunner {
      */
     public boolean runIt(Iterable<? extends JavaFileObject> files, String mainClass) {
         // Compile the files using the JavaCompiler
-        try {
+        try {            
             FromMemoryClassLoader classLoader = JavaCodeCompiler.compile(files, null);
 
             Class<?> compiledClass = classLoader.findClass(mainClass);

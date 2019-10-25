@@ -104,7 +104,7 @@ public class JavaCodeCompiler {
         // Compile the code
         JavaCompiler.CompilationTask task = compiler.getTask(out, fileManager, diag, options, null, files);
         boolean result = task.call();
-        
+                
         // Return the classloader containing the compiled classes
         return classLoader;
     }

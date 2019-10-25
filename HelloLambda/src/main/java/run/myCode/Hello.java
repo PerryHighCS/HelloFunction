@@ -60,7 +60,7 @@ public class Hello implements RequestStreamHandler {
         
         // Set the working directory for data files
         POSIX posix = POSIXFactory.getJavaPOSIX();
-        String workingDir = "/tmp";
+        String workingDir = System.getProperty("java.io.tmpdir"); //"/tmp";
         String startDir = System.getProperty("user.dir");
 
         // Create and move to a working directory

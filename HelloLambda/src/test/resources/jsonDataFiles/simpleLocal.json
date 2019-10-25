@@ -3,11 +3,10 @@
 {
 "compile" :
 {
-	"mainClass": "math.Calculator",
+	"mainClass": "Calculator",
 	"sourceFiles": [{
 		"name": "Calculator.java",
 		"contents": [
-			"package math;",
 			"public class Calculator { ",
 			"private int x = 200;",
 			"private int y = 300;",
