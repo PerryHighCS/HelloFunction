@@ -1,9 +1,11 @@
 package run.myCode;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import run.myCode.compiler.InMemoryJavaFileObject;
 
@@ -41,14 +43,23 @@ public class FileManager {
             return;
         }
         
+        Base64.Decoder decoder = Base64.getDecoder();
+        
         data.getDataFiles().forEach((file) -> {
             File f = (new File(file.getName()));
         
-            try (PrintWriter out = new PrintWriter(f.getAbsoluteFile())) {
-                file.getContents().forEach((text) -> {
-                    out.println(text);
-                });
-            } catch (FileNotFoundException e) {
+            StringBuilder sb = new StringBuilder();
+            
+            file.getContents().forEach((text)->{
+                sb.append(text);
+            });
+            
+            String fileContent = sb.toString();
+            
+            try (OutputStream out = new FileOutputStream(f.getAbsoluteFile())) {
+                byte[] contents = decoder.decode(fileContent);
+                out.write(contents);                
+            } catch (IOException e) {
                 e.printStackTrace();
                 System.err.println("Couldn't write file: " + file.getName());
             }
