@@ -189,7 +189,7 @@ public class CodeRunner {
      * 
      * @return the results of the test
      */
-    public ZombieResult zombieDo(String myZombieSource, List<String> scenarios) {
+    public ZombieResult zombieDo(String myZombieSource, List<SimpleFile> scenarios) {
         ZombieResult res = new ZombieResult();
 
         // Strip out comments
@@ -218,7 +218,7 @@ public class CodeRunner {
         }
 
         // Compile and run the scenarios
-        List<zss.Tester.Result> zr = ZombieLandTester.doScenario(scenarios.toArray(new String[0]), myZombieSource,
+        List<zss.Tester.Result> zr = ZombieLandTester.doScenario(scenarios.toArray(new SimpleFile[0]), myZombieSource,
                 MAX_ZOMBIETIME);
 
         // Extract and save the results from each scenario

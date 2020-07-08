@@ -14,159 +14,155 @@ import java.util.List;
 
 import greenfoot.Actor;
 import greenfoot.World;
+import run.myCode.compiler.SimpleFile;
 import zss.compiler.InMemoryJavaFileObject;
 import zss.compiler.MemoryCompiler;
 
 /**
  * Verify that a MyZombie.java file solves the given problem
- * 
+ *
  * @author bdahl
  */
 public class ZombieLandTester {
-	/**
-	 * Prepare and run a demo of MyZombie in a world
-	 * 
-	 * @param scenarios
-	 *            the xml descriptions of the scenarios to test
-	 * @param zombieSource
-	 *            the java source code for MyZombie.java
-	 * @param maxTime
-	 *            the maximum time to allow for running the scenario
-	 * @return the result of the test
-	 */
-	public static List<Result> doScenario(String[] scenarios, String zombieSource, long maxTime) {
-		// long startTime = System.nanoTime();
 
-		List<Result> results = new ArrayList<>();
+    /**
+     * Prepare and run a demo of MyZombie in a world
+     *
+     * @param scenarios the xml descriptions of the scenarios to test
+     * @param zombieSource the java source code for MyZombie.java
+     * @param maxTime the maximum time to allow for running the scenario
+     * @return the result of the test
+     */
+    public static List<Result> doScenario(SimpleFile[] scenarios, String zombieSource, long maxTime) {
+        // long startTime = System.nanoTime();
 
-		// Create a stream to hold system output during tests
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		PrintStream ps = new PrintStream(baos);
-		PrintStream old = System.out;
-		PrintStream oldErr = System.err;
-		System.setOut(ps);
-		System.setErr(ps);
+        List<Result> results = new ArrayList<>();
 
-		try {
-			InMemoryJavaFileObject myZombie = new InMemoryJavaFileObject("MyZombie.java", zombieSource);
+        // Create a stream to hold system output during tests
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+        PrintStream old = System.out;
+        PrintStream oldErr = System.err;
+        System.setOut(ps);
+        System.setErr(ps);
 
-			List<InMemoryJavaFileObject> files = new ArrayList<>();
-			files.add(myZombie);
-			// Create a classloader that can load from the current folder
-			URL[] urls = new URL[] { ZombieLandTester.class.getProtectionDomain().getCodeSource().getLocation() };
+        try {
+            InMemoryJavaFileObject myZombie = new InMemoryJavaFileObject("MyZombie.java", zombieSource);
 
-			final URLClassLoader urlcl = new URLClassLoader(urls, ZombieLandTester.class.getClassLoader());
+            List<InMemoryJavaFileObject> files = new ArrayList<>();
+            files.add(myZombie);
+            // Create a classloader that can load from the current folder
+            URL[] urls = new URL[]{ZombieLandTester.class.getProtectionDomain().getCodeSource().getLocation()};
 
-			Class<?> zlc = urlcl.loadClass("ZombieLand");
+            final URLClassLoader urlcl = new URLClassLoader(urls, ZombieLandTester.class.getClassLoader());
 
-			ClassLoader cl = MemoryCompiler.compile(files, urlcl);
+            Class<?> zlc = urlcl.loadClass("ZombieLand");
 
-			// long compTime = System.nanoTime();
-			// System.err.printf("Compile time: %.2f\n", (compTime - startTime) / 1.0e9);
+            ClassLoader cl = MemoryCompiler.compile(files, urlcl);
 
-			if (cl != null) {
-				Method lw = zlc.getMethod("loadWorld", String.class, ClassLoader.class);
+            // long compTime = System.nanoTime();
+            // System.err.printf("Compile time: %.2f\n", (compTime - startTime) / 1.0e9);
+            if (cl != null) {
+                Method lw = zlc.getMethod("loadWorld", String.class, ClassLoader.class);
 
-				for (String scenarioDesc : scenarios) {
-					// Create the world from the description, passing in the classloader
-					World zl = (World) lw.invoke(null, scenarioDesc, cl);
+                for (SimpleFile scenarioDesc : scenarios) {
+                    // Create the world from the description, passing in the classloader
+                    World zl = (World) lw.invoke(null, scenarioDesc.getData(), cl);
 
-					Result r = runTest(zl, maxTime);
+                    Result r = runTest(zl, maxTime);
 
-					r.setOutput(baos.toString());
-					baos.reset();
+                    r.setOutput("World: " + scenarioDesc.getName() + '\n' +
+                            baos.toString());
+                    baos.reset();
 
-					results.add(r);
-				}
-			} else {
-				Result r = new Result(false, "Plan no make sense.", null, 0, 0);
-				r.setOutput(baos.toString());
-				baos.reset();
-				results.add(r);
-			}
-		} catch (InvocationTargetException e) {
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			pw.println(e.getTargetException().getMessage());
-			e.getTargetException().printStackTrace(pw);
+                    results.add(r);
+                }
+            } else {
+                Result r = new Result(false, "Plan no make sense.", null, 0, 0);
+                r.setOutput(baos.toString());
+                baos.reset();
+                results.add(r);
+            }
+        } catch (InvocationTargetException e) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            pw.println(e.getTargetException().getMessage());
+            e.getTargetException().printStackTrace(pw);
 
-			Result r = new Result(false, sw.toString(), null, 0, 0);
-			r.setOutput(baos.toString() + sw.toString());
+            Result r = new Result(false, sw.toString(), null, 0, 0);
+            r.setOutput(baos.toString() + sw.toString());
 
-			System.setErr(oldErr);
-			System.setOut(old);
+            System.setErr(oldErr);
+            System.setOut(old);
 
-			results.add(r);
-			return results;
+            results.add(r);
+            return results;
 
-		} catch (IllegalArgumentException | ReflectiveOperationException | SecurityException e) {
-			// If running causes an expression, log the failure
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			e.printStackTrace(pw);
+        } catch (IllegalArgumentException | ReflectiveOperationException | SecurityException e) {
+            // If running causes an expression, log the failure
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
 
-			Result r = new Result(false, sw.toString(), null, 0, 0);
-			r.setOutput(baos.toString() + sw.toString());
+            Result r = new Result(false, sw.toString(), null, 0, 0);
+            r.setOutput(baos.toString() + sw.toString());
 
-			System.setErr(oldErr);
-			System.setOut(old);
+            System.setErr(oldErr);
+            System.setOut(old);
 
-			results.add(r);
-			return results;
-		}
+            results.add(r);
+            return results;
+        }
 
-		System.setOut(old);
-		System.setErr(oldErr);
+        System.setOut(old);
+        System.setErr(oldErr);
 
-		return results;
-	}
+        return results;
+    }
 
-	/**
-	 * Run the Scenario
-	 * 
-	 * @param zl
-	 *            the ZombieLand to test (must be an instance of ZombieLand)
-	 * @param maxTime
-	 *            the maximum time to allow for running the scenario
-	 * @return the result of the test
-	 */
-	private static Result runTest(World zl, long maxTime)
-			throws IllegalArgumentException, ReflectiveOperationException {
+    /**
+     * Run the Scenario
+     *
+     * @param zl the ZombieLand to test (must be an instance of ZombieLand)
+     * @param maxTime the maximum time to allow for running the scenario
+     * @return the result of the test
+     */
+    private static Result runTest(World zl, long maxTime)
+            throws IllegalArgumentException, ReflectiveOperationException {
 
-		if (!zl.getClass().getName().equals("ZombieLand")) {
-			throw new IllegalArgumentException("Bad world class passed to test runner");
-		}
-                
-		long startTime = System.nanoTime();
-		long actCount = 1;
+        if (!zl.getClass().getName().equals("ZombieLand")) {
+            throw new IllegalArgumentException("Bad world class passed to test runner");
+        }
 
-		// Repeatedly run the scenario by calling act on the world and all of
-		// the actors therein
-		while ((System.nanoTime() - startTime < maxTime)
-				&& !(Boolean) zl.getClass().getMethod("isFinished").invoke(zl)) {
-			zl.act();
+        long startTime = System.nanoTime();
+        long actCount = 1;
 
-			List<Actor> actors = zl.getObjects(null);
-			actors.forEach(a -> a.act());
-			actCount++;
-			Thread.yield();
-		}
+        // Repeatedly run the scenario by calling act on the world and all of
+        // the actors therein
+        while ((System.nanoTime() - startTime < maxTime)
+                && !(Boolean) zl.getClass().getMethod("isFinished").invoke(zl)) {
+            zl.act();
 
-		// System.err.println("Test Complete");
+            List<Actor> actors = zl.getObjects(null);
+            actors.forEach(a -> a.act());
+            actCount++;
+            Thread.yield();
+        }
 
-		// Once the scenario completes or runs out of time, generate and return
-		// the result
-		boolean success = (Boolean) zl.getClass().getMethod("success").invoke(zl);
-		String finalMessage = (String) zl.getClass().getMethod("finalMessage").invoke(zl);
+        // System.err.println("Test Complete");
+        // Once the scenario completes or runs out of time, generate and return
+        // the result
+        boolean success = (Boolean) zl.getClass().getMethod("success").invoke(zl);
+        String finalMessage = (String) zl.getClass().getMethod("finalMessage").invoke(zl);
 
-		// System.err.println("Making image");
-		Image image = (Image) zl.getClass().getMethod("image").invoke(zl);
+        // System.err.println("Making image");
+        Image image = (Image) zl.getClass().getMethod("image").invoke(zl);
 
-		double elapsed = (System.nanoTime() - startTime) / 1000000000D;
+        double elapsed = (System.nanoTime() - startTime) / 1000000000D;
 
-		// System.err.println("Ending it all");
-		zl.getClass().getMethod("endIt").invoke(zl);
+        // System.err.println("Ending it all");
+        zl.getClass().getMethod("endIt").invoke(zl);
 
-		return new Result(success, finalMessage, image, elapsed, actCount);
-	}
+        return new Result(success, finalMessage, image, elapsed, actCount);
+    }
 }

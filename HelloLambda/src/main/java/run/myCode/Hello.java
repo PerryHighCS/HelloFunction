@@ -23,6 +23,7 @@ import jnr.posix.POSIX;
 import jnr.posix.POSIXFactory;
 import static run.myCode.FileManager.*;
 import run.myCode.compiler.CodeRunner;
+import run.myCode.compiler.SimpleFile;
 
 public class Hello implements RequestStreamHandler {
 
@@ -132,17 +133,17 @@ public class Hello implements RequestStreamHandler {
                         }
                     }
 
-                    List<String> scenarios = new ArrayList<>();
+                    List<SimpleFile> scenarios = new ArrayList<>();
                     
                     // If there are data files they will be scenarios to test
                     if (data != null) {
-                        for (DataRequest.DataFile file : data.getDataFiles()) {
-                            String scenario = "";
-                            for (String line : file.getContents()) {
-                                scenario += line + "\n";
-                            }
-                            scenarios.add(scenario);
-                        }
+                        data.getDataFiles().forEach(file -> {
+                            String scenarioData = "";
+                            scenarioData = file.getContents().stream()
+                                    .map(line -> line + "\n")
+                                    .reduce(scenarioData, String::concat);
+                            scenarios.add(new SimpleFile(file.getName(), scenarioData));
+                        });
                     }
                     
                     // long prep = System.nanoTime() - startTime;
