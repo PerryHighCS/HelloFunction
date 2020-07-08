@@ -115,9 +115,15 @@ public class Hello implements RequestStreamHandler {
                     testResults = runner.testIt(files, tReq.getTestClasses());
                     success = testResults.getSuccess();
 
-                } else if (req.getTestType().equalsIgnoreCase("zombieland")) {
+                } else if (req.getTestType().equalsIgnoreCase("zombieland") ||
+                           req.getTestType().equalsIgnoreCase("zscript") ||
+                           req.getTestType().equalsIgnoreCase("ultrazscript")) {
                     // System.err.println("Num threads running: " +
                     // ManagementFactory.getThreadMXBean().getThreadCount());
+                    
+                    boolean allowUltraZombie = 
+                            (req.getTestType().equalsIgnoreCase("zombieland") ||
+                            req.getTestType().equalsIgnoreCase("ultrazscript"));
 
                     // Get the myZombie source file
                     String myZombieSource = "";
@@ -150,7 +156,8 @@ public class Hello implements RequestStreamHandler {
                     // System.err.printf("Zombie prep time: %.2f\n", prep / 1.0e9);
                     
                     // Compile and test MyZombie.java in all the scenarios
-                    testResults = runner.zombieDo(myZombieSource, scenarios);
+                    testResults = runner.zombieDo(myZombieSource, scenarios,
+                            allowUltraZombie);
                     success = testResults.getSuccess();
 
                     // long test = System.nanoTime() - startTime - prep;

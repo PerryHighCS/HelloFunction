@@ -23,7 +23,8 @@ import run.myCode.compiler.SimpleFile;
 
 public class HelloLocal extends Hello {
     @Override
-    public void handleRequest(InputStream input, OutputStream output, Context context) throws IOException {
+    public void handleRequest(InputStream input, OutputStream output, 
+            Context context) throws IOException {
 
         long startTime = System.nanoTime();
         
@@ -62,15 +63,18 @@ public class HelloLocal extends Hello {
             CompileRequest cReq = req.getCompileRequest();
             if (cReq != null) {
                 if (cReq.getVersion() > REQUEST_HANDLER_VERSION) {
-                    String msg = "Request version (" + req.getVersion() + ") is > (" + REQUEST_HANDLER_VERSION
-                            + ") output may be incorrect.";
+                    String msg = "Request version (" + req.getVersion() + 
+                            ") is > (" + REQUEST_HANDLER_VERSION +
+                            ") output may be incorrect.";
                     result += msg;
                     System.out.println(msg);
                 }
 
                 if (cReq.getVersion() > COMPILE_REQUEST_HANDLER_VERSION) {
-                    String msg = "Compile Request version (" + cReq.getVersion() + ") is > ("
-                            + COMPILE_REQUEST_HANDLER_VERSION + ") output may be incorrect.";
+                    String msg = "Compile Request version (" + 
+                            cReq.getVersion() + ") is > (" + 
+                            COMPILE_REQUEST_HANDLER_VERSION + 
+                            ") output may be incorrect.";
                     result += msg;
                     System.out.println(msg);
                 }
@@ -79,15 +83,18 @@ public class HelloLocal extends Hello {
 
                 if (data != null) {
                     if (data.getVersion() > DATA_HANDLER_VERSION) {
-                        String msg = "Request data version (" + data.getVersion() + ") is > (" + DATA_HANDLER_VERSION
-                                + ") output may be incorrect.";
+                        String msg = "Request data version (" + 
+                                data.getVersion() + ") is > (" + 
+                                DATA_HANDLER_VERSION +
+                                ") output may be incorrect.";
                         result += msg;
                         System.out.println(msg);
                     }
                 }
 
                 // Construct in-memory java source files from the request dynamic code
-                final Iterable<? extends JavaFileObject> files = createSourceFileObjects(cReq);
+                final Iterable<? extends JavaFileObject> files = 
+                        createSourceFileObjects(cReq);
 
                 if (req.getTestType().equalsIgnoreCase("run")) {
                     saveData(data);
@@ -132,9 +139,14 @@ public class HelloLocal extends Hello {
                         });
                     }
                     
+                    boolean allowUltraZombie = 
+                            (req.getTestType().equalsIgnoreCase("zombieland") ||
+                            req.getTestType().equalsIgnoreCase("ultrazscript"));
+                    
                     // long prep = System.nanoTime() - startTime;
                     // System.err.printf("Zombie prep time: %.2f\n", prep / 1.0e9);
-                    testResults = runner.zombieDo(myZombieSource, scenarios);
+                    testResults = runner.zombieDo(myZombieSource, scenarios,
+                            allowUltraZombie);
                     success = testResults.getSuccess();
 
                     // long test = System.nanoTime() - startTime - prep;

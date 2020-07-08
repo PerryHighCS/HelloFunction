@@ -31,9 +31,11 @@ public class ZombieLandTester {
      * @param scenarios the xml descriptions of the scenarios to test
      * @param zombieSource the java source code for MyZombie.java
      * @param maxTime the maximum time to allow for running the scenario
+     * @param allowUltraZombie if the zombieSource is allowed to extend UltraZombie
      * @return the result of the test
      */
-    public static List<Result> doScenario(SimpleFile[] scenarios, String zombieSource, long maxTime) {
+    public static List<Result> doScenario(SimpleFile[] scenarios,
+            String zombieSource, long maxTime, boolean allowUltraZombie) {
         // long startTime = System.nanoTime();
 
         List<Result> results = new ArrayList<>();
@@ -47,27 +49,40 @@ public class ZombieLandTester {
         System.setErr(ps);
 
         try {
-            InMemoryJavaFileObject myZombie = new InMemoryJavaFileObject("MyZombie.java", zombieSource);
+            InMemoryJavaFileObject myZombie = 
+                    new InMemoryJavaFileObject("MyZombie.java", zombieSource);
 
             List<InMemoryJavaFileObject> files = new ArrayList<>();
             files.add(myZombie);
+            
             // Create a classloader that can load from the current folder
-            URL[] urls = new URL[]{ZombieLandTester.class.getProtectionDomain().getCodeSource().getLocation()};
+            URL[] urls = new URL[]{ZombieLandTester.class.getProtectionDomain()
+                    .getCodeSource().getLocation()};
 
-            final URLClassLoader urlcl = new URLClassLoader(urls, ZombieLandTester.class.getClassLoader());
+            final URLClassLoader urlcl = new URLClassLoader(urls, 
+                    ZombieLandTester.class.getClassLoader());
 
             Class<?> zlc = urlcl.loadClass("ZombieLand");
 
             ClassLoader cl = MemoryCompiler.compile(files, urlcl);
-
+            
+            if (!allowUltraZombie) {
+                Class<?> mz = cl.loadClass("MyZombie");
+                if (!mz.getSuperclass().getSimpleName().equals("Zombie")) {
+                    throw new MyZombieMustExtendZombieException();
+                }
+            }
+            
             // long compTime = System.nanoTime();
             // System.err.printf("Compile time: %.2f\n", (compTime - startTime) / 1.0e9);
             if (cl != null) {
-                Method lw = zlc.getMethod("loadWorld", String.class, ClassLoader.class);
+                Method lw = zlc.getMethod("loadWorld", String.class,
+                        ClassLoader.class);
 
                 for (SimpleFile scenarioDesc : scenarios) {
                     // Create the world from the description, passing in the classloader
-                    World zl = (World) lw.invoke(null, scenarioDesc.getData(), cl);
+                    World zl = (World) lw.invoke(null,  scenarioDesc.getData(),
+                            cl);
 
                     Result r = runTest(zl, maxTime);
 
@@ -83,7 +98,8 @@ public class ZombieLandTester {
                 baos.reset();
                 results.add(r);
             }
-        } catch (InvocationTargetException e) {
+        } 
+        catch (InvocationTargetException e) {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             pw.println(e.getTargetException().getMessage());
@@ -91,14 +107,9 @@ public class ZombieLandTester {
 
             Result r = new Result(false, sw.toString(), null, 0, 0);
             r.setOutput(baos.toString() + sw.toString());
-
-            System.setErr(oldErr);
-            System.setOut(old);
-
             results.add(r);
-            return results;
-
-        } catch (IllegalArgumentException | ReflectiveOperationException | SecurityException e) {
+        }
+        catch (IllegalArgumentException | ReflectiveOperationException | SecurityException e) {
             // If running causes an expression, log the failure
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
@@ -107,16 +118,18 @@ public class ZombieLandTester {
             Result r = new Result(false, sw.toString(), null, 0, 0);
             r.setOutput(baos.toString() + sw.toString());
 
-            System.setErr(oldErr);
-            System.setOut(old);
-
             results.add(r);
-            return results;
         }
-
-        System.setOut(old);
-        System.setErr(oldErr);
-
+        catch (MyZombieMustExtendZombieException e) {
+            // If the user attempted to extend UltraZombie
+            Result r = new Result(false, e.getMessage(), null, 0, 0);
+            results.add(r);
+        }
+        finally {
+            System.setOut(old);
+            System.setErr(oldErr);
+        }
+        
         return results;
     }
 

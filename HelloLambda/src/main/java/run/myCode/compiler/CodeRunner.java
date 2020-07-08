@@ -21,15 +21,18 @@ public class CodeRunner {
      * @param mainClass the name of the class containing the main method to run
      * @return true if compilation and running completed without exceptions
      */
-    public boolean runIt(Iterable<? extends JavaFileObject> files, String mainClass) {
+    public boolean runIt(Iterable<? extends JavaFileObject> files,
+            String mainClass) {
         // Compile the files using the JavaCompiler
         try {            
-            FromMemoryClassLoader classLoader = JavaCodeCompiler.compile(files, null);
+            FromMemoryClassLoader classLoader = JavaCodeCompiler.compile(files,
+                    null);
 
             Class<?> compiledClass = classLoader.findClass(mainClass);
 
             // Call main method of compiled class by reflection
-            compiledClass.getMethod("main", String[].class).invoke(null, new Object[]{null});
+            compiledClass.getMethod("main", String[].class).invoke(null,
+                    new Object[]{null});
             compiledClass = null;
             classLoader = null;
         }
@@ -39,7 +42,8 @@ public class CodeRunner {
                 System.err.println(e.toString());
             }
             System.out.println(e.toString());
-            System.out.println("Main class: " + mainClass + " not found in source files, could not execute.");
+            System.out.println("Main class: " + mainClass + 
+                    " not found in source files, could not execute.");
             return false;
         }
         catch (NoSuchMethodException | IllegalArgumentException e) {
@@ -48,8 +52,8 @@ public class CodeRunner {
                 System.err.println(e.toString());
             }
             System.out.println(e.toString());
-            System.out.println("Main class: " + mainClass
-                    + " does not contain a \"main\" method, or main method has incorrect parameter list.");
+            System.out.println("Main class: " + mainClass +
+                    " does not contain a \"main\" method, or main method has incorrect parameter list.");
             return false;
         }
         catch (IllegalAccessException e) {
@@ -60,7 +64,8 @@ public class CodeRunner {
             System.err.println(stackTrace(e.getStackTrace(), null));
             System.out.println(e.toString());
             System.out.println(stackTrace(e.getStackTrace(), null));
-            System.out.println("Main class: " + mainClass + " \"main\" method is inaccessable.  Is it \"public\"?");
+            System.out.println("Main class: " + mainClass + 
+                    " \"main\" method is inaccessable.  Is it \"public\"?");
             return false;
         }
         catch (InvocationTargetException e) {
@@ -114,7 +119,8 @@ public class CodeRunner {
      * @param tests the names of classes containing tests to run
      * @return true if compilation and running completed without exceptions
      */
-    public TestResult testIt(Iterable<? extends JavaFileObject> files, List<String> tests) {
+    public TestResult testIt(Iterable<? extends JavaFileObject> files,
+            List<String> tests) {
         TestResult score = new TestResult();
 
         FromMemoryClassLoader classLoader;
@@ -158,7 +164,8 @@ public class CodeRunner {
 
                 // Add a failed test to the results
                 score.addFailedTest(test,
-                        "The test class " + test + " was not found. Check \"Test Summary\" for compilation errors.");
+                        "The test class " + test + 
+                        " was not found. Check \"Test Summary\" for compilation errors.");
             } catch (OutOfMemoryError e) {
                 // If there is an out of memory, the gc should have run, but call it again Sam
                 System.gc();
@@ -168,7 +175,8 @@ public class CodeRunner {
 
                 // Add a failed test to the results
                 score.addFailedTest(e.toString(),
-                        baos.toString() + stackTrace(e.getStackTrace(), this.getClass().getCanonicalName() + ".testIt"));
+                        baos.toString() + stackTrace(e.getStackTrace(),
+                                this.getClass().getCanonicalName() + ".testIt"));
             }
         });
 
@@ -186,10 +194,11 @@ public class CodeRunner {
      * 
      * @param myZombieSource the MyZombie.java source file
      * @param scenarios a list of the XML descriptions of the scenarios to test
-     * 
+     * @param allowUltraZombie can the zombie source extend UltraZombie?
      * @return the results of the test
      */
-    public ZombieResult zombieDo(String myZombieSource, List<SimpleFile> scenarios) {
+    public ZombieResult zombieDo(String myZombieSource, 
+            List<SimpleFile> scenarios, boolean allowUltraZombie) {
         ZombieResult res = new ZombieResult();
 
         // Strip out comments
@@ -218,8 +227,9 @@ public class CodeRunner {
         }
 
         // Compile and run the scenarios
-        List<zss.Tester.Result> zr = ZombieLandTester.doScenario(scenarios.toArray(new SimpleFile[0]), myZombieSource,
-                MAX_ZOMBIETIME);
+        List<zss.Tester.Result> zr = 
+                ZombieLandTester.doScenario(scenarios.toArray(new SimpleFile[0]), 
+                        myZombieSource, MAX_ZOMBIETIME, allowUltraZombie);
 
         // Extract and save the results from each scenario
         zr.forEach(r -> {
