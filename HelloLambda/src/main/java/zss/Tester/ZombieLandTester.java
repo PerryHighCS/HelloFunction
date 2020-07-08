@@ -122,7 +122,8 @@ public class ZombieLandTester {
         }
         catch (MyZombieMustExtendZombieException e) {
             // If the user attempted to extend UltraZombie
-            Result r = new Result(false, e.getMessage(), null, 0, 0);
+            Result r = new Result(false, "Zombie not Ultra.", null, 0, 0);
+            r.setOutput(e.getMessage());
             results.add(r);
         }
         finally {

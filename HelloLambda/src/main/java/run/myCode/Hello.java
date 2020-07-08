@@ -37,7 +37,7 @@ public class Hello implements RequestStreamHandler {
     public void handleRequest(InputStream input, OutputStream output, Context context) throws IOException {
 
         long startTime = System.nanoTime();
-        
+
         CodeRunner runner = new CodeRunner();
 
         ObjectMapper mapper = new ObjectMapper();
@@ -55,10 +55,10 @@ public class Hello implements RequestStreamHandler {
         PrintStream ps = new PrintStream(boas);
         PrintStream old = System.out;
         InputStream in = System.in;
-        
+
         System.setOut(ps);
         System.setIn(new ByteArrayInputStream("\n".getBytes(StandardCharsets.UTF_8)));
-        
+
         // Set the working directory for data files
         POSIX posix = POSIXFactory.getJavaPOSIX();
         String workingDir = System.getProperty("java.io.tmpdir"); //"/tmp";
@@ -68,7 +68,6 @@ public class Hello implements RequestStreamHandler {
         // posix.mkdir(workingDir, 777);
         // posix.chdir(workingDir);
         // System.setProperty("user.dir", workingDir);
-        
         // Finally... handle the request
         if (req != null) {
             CompileRequest cReq = req.getCompileRequest();
@@ -110,18 +109,18 @@ public class Hello implements RequestStreamHandler {
                 } else if (req.getTestType().equalsIgnoreCase("junit")) {
                     saveData(data);
                     TestRequest tReq = req.getTestRequest();
-                    
+
                     // Compile and test the source files
                     testResults = runner.testIt(files, tReq.getTestClasses());
                     success = testResults.getSuccess();
 
-                } else if (req.getTestType().equalsIgnoreCase("zombieland") ||
-                           req.getTestType().equalsIgnoreCase("zscript") ||
-                           req.getTestType().equalsIgnoreCase("ultrazscript")) {
+                } else if (req.getTestType().equalsIgnoreCase("zombieland")
+                        || req.getTestType().equalsIgnoreCase("zscript")
+                        || req.getTestType().equalsIgnoreCase("ultrazscript")) {
                     // System.err.println("Num threads running: " +
                     // ManagementFactory.getThreadMXBean().getThreadCount());
-                    
-                    boolean allowUltraZombie = 
+
+                    boolean allowUltraZombie =
                             (req.getTestType().equalsIgnoreCase("zombieland") ||
                             req.getTestType().equalsIgnoreCase("ultrazscript"));
 
@@ -140,7 +139,7 @@ public class Hello implements RequestStreamHandler {
                     }
 
                     List<SimpleFile> scenarios = new ArrayList<>();
-                    
+
                     // If there are data files they will be scenarios to test
                     if (data != null) {
                         data.getDataFiles().forEach(file -> {
@@ -151,10 +150,9 @@ public class Hello implements RequestStreamHandler {
                             scenarios.add(new SimpleFile(file.getName(), scenarioData));
                         });
                     }
-                    
+
                     // long prep = System.nanoTime() - startTime;
                     // System.err.printf("Zombie prep time: %.2f\n", prep / 1.0e9);
-                    
                     // Compile and test MyZombie.java in all the scenarios
                     testResults = runner.zombieDo(myZombieSource, scenarios,
                             allowUltraZombie);
@@ -184,9 +182,8 @@ public class Hello implements RequestStreamHandler {
             success = false;
         }
 
-        
         System.setIn(in);
-                
+
         // Move back to the starting dir
         posix.chdir(startDir);
         System.setProperty("user.dir", startDir);

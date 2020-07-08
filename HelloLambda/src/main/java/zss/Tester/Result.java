@@ -14,7 +14,8 @@ import javax.imageio.ImageIO;
  */
 public class Result {
 
-    protected Result(Boolean success, String msg, Image img, double elapsedSec, long actCount) {
+    protected Result(Boolean success, String msg, Image img, 
+            double elapsedSec, long actCount) {
         this.success = success;
         this.message = msg;
         this.image = img;

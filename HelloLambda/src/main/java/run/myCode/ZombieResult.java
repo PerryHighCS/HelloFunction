@@ -15,92 +15,96 @@ import javax.imageio.ImageIO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ZombieResult extends TestResult {
-	public static class ScenarioResult extends TestResult.CaseResult {
 
-		private String imgData;
-		private Double elapsedTime;
-		private long actCount;
+    public static class ScenarioResult extends TestResult.CaseResult {
 
-		@JsonProperty("elapsedTime")
-		public Double getElapsedTime() {
-			return elapsedTime;
-		}
+        private String imgData;
+        private Double elapsedTime;
+        private long actCount;
 
-		@JsonProperty("elapsedTime")
-		public void setElapsedTime(Double elapsedTime) {
-			this.elapsedTime = elapsedTime;
-		}
+        @JsonProperty("elapsedTime")
+        public Double getElapsedTime() {
+            return elapsedTime;
+        }
 
-		@JsonProperty("image")
-		public void setImage(String imgData) {
-			this.imgData = imgData;
-		}
+        @JsonProperty("elapsedTime")
+        public void setElapsedTime(Double elapsedTime) {
+            this.elapsedTime = elapsedTime;
+        }
 
-		@JsonProperty("image")
-		public String getImage64() {
-			return this.imgData;
-		}
+        @JsonProperty("image")
+        public void setImage(String imgData) {
+            this.imgData = imgData;
+        }
 
-		public void setImage(Image image) {
-			if (image == null) {
-				imgData = "";
-				return;
-			}
+        @JsonProperty("image")
+        public String getImage64() {
+            return this.imgData;
+        }
 
-			ByteArrayOutputStream boas = new ByteArrayOutputStream();
+        public void setImage(Image image) {
+            if (image == null) {
+                imgData = "";
+                return;
+            }
 
-			BufferedImage img;
-			if (image instanceof BufferedImage) {
-				img = (BufferedImage) image;
-			} else {
-				int width = image.getWidth(null);
-				int height = image.getHeight(null);
-				img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-				Graphics2D bGr = img.createGraphics();
-				bGr.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-				bGr.drawImage(image, 0, 0, width, height, null);
-				bGr.dispose();
-			}
-			try {
-				ImageIO.write(img, "png", boas);
-			} catch (IOException e) {
-			}
+            ByteArrayOutputStream boas = new ByteArrayOutputStream();
 
-			imgData = "data:image/png;base64," + Base64.getEncoder().encodeToString(boas.toByteArray());
-		}
+            BufferedImage img;
+            if (image instanceof BufferedImage) {
+                img = (BufferedImage) image;
+            } else {
+                int width = image.getWidth(null);
+                int height = image.getHeight(null);
+                img = new BufferedImage(width, height, 
+                        BufferedImage.TYPE_INT_RGB);
+                Graphics2D bGr = img.createGraphics();
+                bGr.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                        RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                bGr.drawImage(image, 0, 0, width, height, null);
+                bGr.dispose();
+            }
+            try {
+                ImageIO.write(img, "png", boas);
+            } catch (IOException e) {
+            }
 
-		public Image getImage() {
-			String data = imgData.substring(imgData.indexOf(',') + 1);
-			Decoder decoder = Base64.getDecoder();
-			byte[] imgBytes = decoder.decode(data);
+            imgData = "data:image/png;base64," + Base64.getEncoder().encodeToString(boas.toByteArray());
+        }
 
-			try {
-				return ImageIO.read(new ByteArrayInputStream(imgBytes));
-			} catch (IOException e) {
-				return null;
-			}
-		}
+        public Image getImage() {
+            String data = imgData.substring(imgData.indexOf(',') + 1);
+            Decoder decoder = Base64.getDecoder();
+            byte[] imgBytes = decoder.decode(data);
 
-		@JsonProperty("actCount")
-		public long getActCount() {
-			return actCount;
-		}
+            try {
+                return ImageIO.read(new ByteArrayInputStream(imgBytes));
+            } catch (IOException e) {
+                return null;
+            }
+        }
 
-		@JsonProperty("actCount")
-		public void setActCount(long actCount) {
-			this.actCount = actCount;
-		}
+        @JsonProperty("actCount")
+        public long getActCount() {
+            return actCount;
+        }
 
-	}
+        @JsonProperty("actCount")
+        public void setActCount(long actCount) {
+            this.actCount = actCount;
+        }
 
-	public void addTest(String description, String body, boolean success, Image image, Double elapsedSeconds) {
-		ScenarioResult test = new ScenarioResult();
-		test.description = description;
-		test.body = body;
-		test.passed = success;
-		test.elapsedTime = elapsedSeconds;
-		test.setImage(image);
+    }
 
-		super.addCase(test);
-	}
+    public void addTest(String description, String body, boolean success, 
+            Image image, Double elapsedSeconds) {
+        ScenarioResult test = new ScenarioResult();
+        test.description = description;
+        test.body = body;
+        test.passed = success;
+        test.elapsedTime = elapsedSeconds;
+        test.setImage(image);
+
+        super.addCase(test);
+    }
 }
