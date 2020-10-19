@@ -33,8 +33,9 @@ public class CodeRunner {
             // Call main method of compiled class by reflection
             compiledClass.getMethod("main", String[].class)
                     .invoke(null, new Object[]{null});
-            compiledClass = null;
-            classLoader = null;
+
+            // If we make it here, the run succeeded!
+            return true;
         }
         catch (ClassNotFoundException | NullPointerException e) {
             // Handle exceptions caused by the code being compiled
@@ -126,9 +127,6 @@ public class CodeRunner {
             // Fail the run
             return false;
         }
-
-        // If we make it here, the run succeeded!
-        return true;
     }
 
     /**
