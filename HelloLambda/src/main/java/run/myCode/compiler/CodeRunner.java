@@ -232,19 +232,24 @@ public class CodeRunner {
         if (myZombieSource.matches("[\\S\\s]*(?<![=!])=(?!=)[\\S\\s]*")) {
             // Quit because there's an assignment statement
             return badZombie("Zombie not know =");
-        } else if (myZombieSource.matches("[\\S\\s]*\\d[\\S\\s]*")) {
+        }
+        else if (myZombieSource.matches("[\\S\\s]*\\d[\\S\\s]*")) {
             // Quit because there's a scary number
             return badZombie("Zombie not know numbers");
-        } else if (myZombieSource.contains("<")) {
+        }
+        else if (myZombieSource.contains("<")) {
             // Quit because there's a comparison statement
             return badZombie("Zombie not know <");
-        } else if (myZombieSource.contains(">")) {
+        }
+        else if (myZombieSource.contains(">")) {
             // Quit because there's a comparison statement
             return badZombie("Zombie not know >");
-        } else if (myZombieSource.contains("+")) {
+        }
+        else if (myZombieSource.contains("+")) {
             // Quit because there's a math expression
             return badZombie("Zombie not know +");
-        } else if (myZombieSource.contains("-")) {
+        }
+        else if (myZombieSource.contains("-")) {
             // Quit because there's a math expression
             return badZombie("Zombie not know -");
         }
@@ -314,7 +319,8 @@ public class CodeRunner {
                 trace.append("\t");
                 trace.append(frame.toString());
                 trace.append("\n");
-            } else {
+            }
+            else {
                 break;
             }
         }
