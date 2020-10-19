@@ -32,7 +32,7 @@ public class CodeRunner {
 
             // Call main method of compiled class by reflection
             compiledClass.getMethod("main", String[].class)
-                    .invoke(null, new Object[]{null});
+                         .invoke(null, new Object[]{null});
 
             // If we make it here, the run succeeded!
             return true;
@@ -40,7 +40,7 @@ public class CodeRunner {
         catch (ClassNotFoundException | NullPointerException e) {
             // Handle exceptions caused by the code being compiled
             
-            // Display the exception
+            // (Log and) Display the exception
             if (System.err != System.out) {
                 System.err.println(e.toString());
             }
@@ -54,7 +54,7 @@ public class CodeRunner {
         catch (NoSuchMethodException | IllegalArgumentException e) {
             // Handle exceptions caused by an incorrect main method
             
-            // Display the exception
+            // (Log and) Display the exception
             if (System.err != System.out) {
                 System.err.println(e.toString());
             }
@@ -68,7 +68,7 @@ public class CodeRunner {
         catch (IllegalAccessException e) {
             // Handle exceptions caused by incorrect visibility on main method
             
-            // Display the exception
+            // (Log and) Display the exception
             if (System.err != System.out) {
                 System.err.println(e.toString());
             }
@@ -92,7 +92,7 @@ public class CodeRunner {
             }
             StackTraceElement[] frames = cause.getStackTrace();
 
-            // Show the reason for the exception
+            // (Log and) Show the reason for the exception
             if (System.err != System.out) {
                 System.err.println(cause.toString());
             }
@@ -113,7 +113,7 @@ public class CodeRunner {
             // but call it again
             System.gc();
 
-            // Display the exception and call stack
+            // (Log and) Display the exception and call stack
             StackTraceElement[] frames = e.getStackTrace();
             if (System.err != System.out) {
                 System.err.println(e.toString());
@@ -188,7 +188,8 @@ public class CodeRunner {
                 score.addFailedTest(test,
                         "The test class " + test + 
                         " was not found. Check \"Test Summary\" for compilation errors.");
-            } catch (OutOfMemoryError e) {
+            }
+            catch (OutOfMemoryError e) {
                 // If there is an out of memory, the gc should have run, but call it again Sam
                 System.gc();
 
