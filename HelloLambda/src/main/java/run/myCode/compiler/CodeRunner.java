@@ -25,39 +25,49 @@ public class CodeRunner {
             String mainClass) {
         // Compile the files using the JavaCompiler
         try {            
-            FromMemoryClassLoader classLoader = JavaCodeCompiler.compile(files,
-                    null);
+            FromMemoryClassLoader classLoader = 
+                    JavaCodeCompiler.compile(files, null);
 
             Class<?> compiledClass = classLoader.findClass(mainClass);
 
             // Call main method of compiled class by reflection
-            compiledClass.getMethod("main", String[].class).invoke(null,
-                    new Object[]{null});
+            compiledClass.getMethod("main", String[].class)
+                    .invoke(null, new Object[]{null});
             compiledClass = null;
             classLoader = null;
         }
         catch (ClassNotFoundException | NullPointerException e) {
             // Handle exceptions caused by the code being compiled
+            
+            // Display the exception
             if (System.err != System.out) {
                 System.err.println(e.toString());
             }
             System.out.println(e.toString());
             System.out.println("Main class: " + mainClass + 
                     " not found in source files, could not execute.");
+            
+            // Fail the run
             return false;
         }
         catch (NoSuchMethodException | IllegalArgumentException e) {
             // Handle exceptions caused by an incorrect main method
+            
+            // Display the exception
             if (System.err != System.out) {
                 System.err.println(e.toString());
             }
             System.out.println(e.toString());
             System.out.println("Main class: " + mainClass +
                     " does not contain a \"main\" method, or main method has incorrect parameter list.");
+            
+            // Fail the run
             return false;
         }
         catch (IllegalAccessException e) {
             // Handle exceptions caused by incorrect visibility on main method
+            
+            // Display the exception
             if (System.err != System.out) {
                 System.err.println(e.toString());
             }
@@ -65,16 +75,20 @@ public class CodeRunner {
             System.out.println(e.toString());
             System.out.println(stackTrace(e.getStackTrace(), null));
             System.out.println("Main class: " + mainClass + 
-                    " \"main\" method is inaccessable.  Is it \"public\"?");
+                    " \"main\" method is inaccessible.  Is it \"public\"?");
+            
+            // Fail the run
             return false;
         }
         catch (InvocationTargetException e) {
             // Handle exceptions caused inside of the main method
+            
+            
+            // Get the stack trace to display where the exception occurred
             Throwable cause = e.getCause();
             if (cause == null) {
                 cause = e;
             }
-
             StackTraceElement[] frames = cause.getStackTrace();
 
             // Show the reason for the exception
@@ -84,19 +98,22 @@ public class CodeRunner {
             System.out.println(cause.toString());
             System.out.println("Call Stack:");
 
-            // Show the call stack for the exception... but do not include any of stack
-            // containing this method or below
-            System.out.println(stackTrace(frames, this.getClass().getCanonicalName()  + ".runIt"));
+            // Show the call stack for the exception... but do not include any 
+            // of the stack containing this method or below
+            System.out.println(stackTrace(frames, 
+                    this.getClass().getCanonicalName()  + ".runIt"));
 
+            // Fail the run
             return false;
         }
-        catch (OutOfMemoryError | SecurityException | ExceptionInInitializerError e) {
-            // If there is an out of memory, the gc should have run, but call it again Sam
+        catch (OutOfMemoryError | SecurityException |
+                ExceptionInInitializerError e) {
+            // If there is an out of memory, the gc should have run,
+            // but call it again
             System.gc();
 
             // Display the exception and call stack
             StackTraceElement[] frames = e.getStackTrace();
-
             if (System.err != System.out) {
                 System.err.println(e.toString());
             }
@@ -106,9 +123,11 @@ public class CodeRunner {
             // Show only the part of the call stack above this method
             System.out.println(stackTrace(frames, this.getClass().getCanonicalName() + ".runIt"));
 
+            // Fail the run
             return false;
         }
 
+        // If we make it here, the run succeeded!
         return true;
     }
 
@@ -130,11 +149,15 @@ public class CodeRunner {
             classLoader = JavaCodeCompiler.compile(files, null);
         } 
         catch (ClassNotFoundException | NullPointerException e) {
-            // If compiling caused an exception, fail
+            // If compiling caused an exception
+            
+            // Display the exception
             if (System.err != System.out) {
                 System.err.println(e.toString());
             }
             System.out.println(e.toString());
+            
+            // Return the failed test results
             return score;
         }
 
@@ -144,6 +167,7 @@ public class CodeRunner {
         PrintStream old = System.out;
         System.setOut(ps);
 
+        // Create a JUnit tester and a listener for its results
         JUnitCore junit = new JUnitCore();
         ResultInnumerator allResults = new ResultInnumerator(baos);
         junit.addListener(allResults);
@@ -180,12 +204,12 @@ public class CodeRunner {
             }
         });
 
-        // Clear the output and restore the original
+        // Clear the output and restore the original system output
         if (System.out != null) 
             System.out.flush();
-   
         System.setOut(old);
 
+        // Return the test results
         return score;
     }
 
