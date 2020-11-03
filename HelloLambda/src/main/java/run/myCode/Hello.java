@@ -48,7 +48,8 @@ public class Hello implements RequestStreamHandler {
 
         TestResult testResults = null;
         String result = "";
-        boolean success;
+        String testType = "";
+        boolean success = false;
 
         // Create a stream to hold system output for reporting back with the result
         ByteArrayOutputStream boas = new ByteArrayOutputStream();
@@ -69,9 +70,19 @@ public class Hello implements RequestStreamHandler {
         // posix.chdir(workingDir);
         // System.setProperty("user.dir", workingDir);
         // Finally... handle the request
-        if (req != null) {
+        if (req == null) {
+            result = "Missing Request";
+            success = false;
+            testType = "No Request";
+        } else {
             CompileRequest cReq = req.getCompileRequest();
-            if (cReq != null) {
+            
+            if (cReq == null) {
+                result = "Nothing to do";
+                success = false;
+                testType = "Null test";
+            }
+            else {
                 if (cReq.getVersion() > REQUEST_HANDLER_VERSION) {
                     String msg = "Request version (" + req.getVersion() + ") is > (" + REQUEST_HANDLER_VERSION
                             + ") output may be incorrect.";
@@ -100,86 +111,93 @@ public class Hello implements RequestStreamHandler {
                 // Construct in-memory java source files from the request dynamic code
                 final Iterable<? extends JavaFileObject> files = createSourceFileObjects(cReq);
 
-                // Execute the appropriate compile/run request
-                if (req.getTestType().equalsIgnoreCase("run")) {
-                    saveData(data);
-                    // Compile and run the source files
-                    success = runner.runIt(files, cReq.getMainClass());
+                boolean allowUltraZombie = false; // For zombie requests: don't allow ultraZombie by default
+                
+                // Execute the appropriate compile/run request                
+                switch (req.getTestType().toLowerCase()) {
+                    case "run":
+                        testType = "Run";
+                        saveData(data);
+                        // Compile and run the source files
+                        success = runner.runIt(files, cReq.getMainClass());
+                        break;
+                        
+                    case "jscompile":
+                        testType = "Compile to js";
+                        break;
+                        
+                    case "junit":
+                        testType = "jUnit test";
+                        saveData(data);
+                        TestRequest tReq = req.getTestRequest();
 
-                } else if (req.getTestType().equalsIgnoreCase("junit")) {
-                    saveData(data);
-                    TestRequest tReq = req.getTestRequest();
+                        // Compile and test the source files
+                        testResults = runner.testIt(files, tReq.getTestClasses());
+                        success = testResults.getSuccess();
+                        break;
+                        
+                    case "zombieland":
+                    case "ultrazscript":
+                        allowUltraZombie = true;
+                    case "zscript":
+                        testType = "ZombieLand";
+                        
+                        // System.err.println("Num threads running: " +
+                        // ManagementFactory.getThreadMXBean().getThreadCount());
 
-                    // Compile and test the source files
-                    testResults = runner.testIt(files, tReq.getTestClasses());
-                    success = testResults.getSuccess();
-
-                } else if (req.getTestType().equalsIgnoreCase("zombieland")
-                        || req.getTestType().equalsIgnoreCase("zscript")
-                        || req.getTestType().equalsIgnoreCase("ultrazscript")) {
-                    // System.err.println("Num threads running: " +
-                    // ManagementFactory.getThreadMXBean().getThreadCount());
-
-                    boolean allowUltraZombie =
-                            (req.getTestType().equalsIgnoreCase("zombieland") ||
-                            req.getTestType().equalsIgnoreCase("ultrazscript"));
-
-                    // Get the myZombie source file
-                    String myZombieSource = "";
-                    for (JavaFileObject file : files) {
-                        if (file.getName().equals("/MyZombie.java")) {
-                            try {
-                                myZombieSource = (String) file.getCharContent(true);
-                                break;
-                            } catch (IOException e) {
+                        // Get the myZombie source file
+                        String myZombieSource = "";
+                        for (JavaFileObject file : files) {
+                            if (file.getName().equals("/MyZombie.java")) {
+                                try {
+                                    myZombieSource = (String) file.getCharContent(true);
+                                    break;
+                                } catch (IOException e) {
+                                }
+                            } else {
+                                result += "UNKNOWN FILE: " + file.getName();
                             }
-                        } else {
-                            result += "UNKNOWN FILE: " + file.getName();
                         }
-                    }
 
-                    List<SimpleFile> scenarios = new ArrayList<>();
+                        List<SimpleFile> scenarios = new ArrayList<>();
 
-                    // If there are data files they will be scenarios to test
-                    if (data != null) {
-                        data.getDataFiles().forEach(file -> {
-                            String scenarioData = "";
-                            scenarioData = file.getContents().stream()
-                                    .map(line -> line + "\n")
-                                    .reduce(scenarioData, String::concat);
-                            scenarios.add(new SimpleFile(file.getName(), scenarioData));
-                        });
-                    }
+                        // If there are data files they will be scenarios to test
+                        if (data != null) {
+                            data.getDataFiles().forEach(file -> {
+                                String scenarioData = "";
+                                scenarioData = file.getContents().stream()
+                                        .map(line -> line + "\n")
+                                        .reduce(scenarioData, String::concat);
+                                scenarios.add(new SimpleFile(file.getName(), scenarioData));
+                            });
+                        }
 
-                    // long prep = System.nanoTime() - startTime;
-                    // System.err.printf("Zombie prep time: %.2f\n", prep / 1.0e9);
-                    // Compile and test MyZombie.java in all the scenarios
-                    testResults = runner.zombieDo(myZombieSource, scenarios,
-                            allowUltraZombie);
-                    success = testResults.getSuccess();
+                        // long prep = System.nanoTime() - startTime;
+                        // System.err.printf("Zombie prep time: %.2f\n", prep / 1.0e9);
+                        // Compile and test MyZombie.java in all the scenarios
+                        testResults = runner.zombieDo(myZombieSource, scenarios,
+                                allowUltraZombie);
+                        success = testResults.getSuccess();
 
-                    // long test = System.nanoTime() - startTime - prep;
-                    // System.err.printf("Zombie test time: %.2f\n", test / 1.0e9);
-                    // System.err.println(
-                    // "Num threads still running: " +
-                    // ManagementFactory.getThreadMXBean().getThreadCount());
-                } else {
-                    System.err.println("Nothing to do");
-                    result += "Nothing to do.";
-                    success = false;
+                        // long test = System.nanoTime() - startTime - prep;
+                        // System.err.printf("Zombie test time: %.2f\n", test / 1.0e9);
+                        // System.err.println(
+                        // "Num threads still running: " +
+                        // ManagementFactory.getThreadMXBean().getThreadCount());
+                        break;
+                        
+                    default:
+                        testType = "Unknown test";
+                        System.err.println("Nothing to do");
+                        result += "Nothing to do.";
+                        success = false;
                 }
 
                 // Retrieve the output as a string
                 System.out.flush();
                 System.setOut(old);
                 result += boas.toString();
-            } else {
-                result = "Nothing to do";
-                success = false;
             }
-        } else {
-            result = "Missing Request";
-            success = false;
         }
 
         System.setIn(in);
@@ -197,19 +215,22 @@ public class Hello implements RequestStreamHandler {
         }
 
         Runtime runtime = Runtime.getRuntime();
-        StringBuilder sb = new StringBuilder();
+        StringBuilder logReport = new StringBuilder();
+        
+        logReport.append(testType).append("\n");
+        
         NumberFormat format = NumberFormat.getInstance();
         long maxMemory = runtime.maxMemory();
         long allocatedMemory = runtime.totalMemory();
 
         // Log memory usage
         long freeMemory = runtime.freeMemory();
-        sb.append("free memory: ").append(format.format(freeMemory / 1024)).append("\t");
-        sb.append("allocated memory: ").append(format.format(allocatedMemory / 1024)).append("\t");
-        sb.append("max memory: ").append(format.format(maxMemory / 1024)).append("\t");
-        sb.append("total free memory: ").append(format.format((freeMemory + (maxMemory - allocatedMemory)) / 1024)).append("\t");
-        sb.append("request duration: ").append(format.format((System.nanoTime() - startTime) / 1.0e9)).append("sec");
-        System.err.println(sb.toString());
+        logReport.append("free memory: ").append(format.format(freeMemory / 1024)).append("\t");
+        logReport.append("allocated memory: ").append(format.format(allocatedMemory / 1024)).append("\t");
+        logReport.append("max memory: ").append(format.format(maxMemory / 1024)).append("\t");
+        logReport.append("total free memory: ").append(format.format((freeMemory + (maxMemory - allocatedMemory)) / 1024)).append("\t");
+        logReport.append("request duration: ").append(format.format((System.nanoTime() - startTime) / 1.0e9)).append("sec");
+        System.err.println(logReport.toString());
 
         CompileResponse resp = new CompileResponse();
 

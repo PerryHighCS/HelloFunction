@@ -15,7 +15,6 @@ import javax.imageio.ImageIO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ZombieResult extends TestResult {
-
     public static class ScenarioResult extends TestResult.CaseResult {
 
         private String imgData;
