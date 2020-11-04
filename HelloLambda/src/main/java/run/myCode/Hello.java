@@ -23,6 +23,7 @@ import jnr.posix.POSIX;
 import jnr.posix.POSIXFactory;
 import static run.myCode.FileManager.*;
 import run.myCode.compiler.CodeRunner;
+import run.myCode.compiler.JsCompiler;
 import run.myCode.compiler.SimpleFile;
 
 public class Hello implements RequestStreamHandler {
@@ -124,6 +125,16 @@ public class Hello implements RequestStreamHandler {
                         
                     case "jscompile":
                         testType = "Compile to js";
+                        JsCompiler jscompiler = new JsCompiler(files, cReq.getMainClass());
+                        success = jscompiler.succeeded();
+                        if (success) {
+                            result = jscompiler.toJSON();
+                            boas.reset();
+                        }
+                        else {
+                            result = jscompiler.getMessages();
+                            boas.reset();
+                        }
                         break;
                         
                     case "junit":

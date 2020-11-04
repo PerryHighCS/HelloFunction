@@ -1,6 +1,8 @@
 package run.myCode.compiler;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class FromMemoryClassLoader extends ClassLoader {
@@ -45,5 +47,9 @@ public class FromMemoryClassLoader extends ClassLoader {
         // System.err.println("Added class: " + name);
         // System.out.println("Added class:" + name);
         m.put(name, mbc);
+    }
+    
+    public List<String> getClassNames() {
+        return new ArrayList(m.keySet());
     }
 }
