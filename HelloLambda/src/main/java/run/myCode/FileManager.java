@@ -57,7 +57,15 @@ public class FileManager {
             String fileContent = sb.toString();
             
             try (OutputStream out = new FileOutputStream(f.getAbsoluteFile())) {
-                byte[] contents = decoder.decode(fileContent);
+                byte[] contents;
+                
+                // Base64 decode the file contents if necessary
+                try {
+                    contents = decoder.decode(fileContent);
+                }
+                catch (IllegalArgumentException e) {
+                    contents = fileContent.getBytes();
+                }
                 out.write(contents);                
             } catch (IOException e) {
                 e.printStackTrace();
