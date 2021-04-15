@@ -68,9 +68,7 @@ public class CompileRequest {
         this.sourceFiles = new ArrayList<>(Arrays.asList(files));
     }
 
-    ;
-	
-	public List<FileClass> getSourceFiles() {
+    public List<FileClass> getSourceFiles() {
         return sourceFiles;
     }
 

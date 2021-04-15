@@ -127,6 +127,8 @@ public class CodeRunner {
             // Fail the run
             return false;
         }
+        // Handle runtime exceptions when initializing compiled code such as
+        // NoClassDefFoundError - occurs when subclass doesn't compile
         catch (Throwable e) { // NoClassDefFoundError
             // (Log and) Display the exception
             if (System.err != System.out) {
