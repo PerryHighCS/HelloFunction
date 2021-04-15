@@ -127,6 +127,17 @@ public class CodeRunner {
             // Fail the run
             return false;
         }
+        catch (Throwable e) { // NoClassDefFoundError
+            // (Log and) Display the exception
+            if (System.err != System.out) {
+                System.err.println(e.toString());
+                System.err.println(stackTrace(e.getStackTrace(), null));
+            }
+            System.out.println(e.toString());
+            System.out.println(stackTrace(e.getStackTrace(), null));
+            
+            return false;
+        }
     }
 
     /**
