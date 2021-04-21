@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>run.mycode</groupId>
     <artifactId>hellofunction</artifactId>
-    <version>5.0.1</version>
+    <version>6.0.1</version>
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -62,7 +62,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-lambda</artifactId>
-            <!--<version>1.11.893</version> -->
+            <version>1.11.893</version>
         </dependency>
         
         <dependency>
