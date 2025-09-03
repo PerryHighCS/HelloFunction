@@ -1,0 +1,6 @@
+{
+  "name": "Java 17 Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/java:17",
+  "settings": {},
+  "extensions": []
+}

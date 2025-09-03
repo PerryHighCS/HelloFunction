@@ -7,27 +7,6 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-install-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>hack-binary</id>
-            <phase>clean</phase>
-            <goals>
-              <goal>install-file</goal>
-            </goals>
-            <configuration>
-              <file>${JAVA_HOME}/lib/tools.jar</file>
-              <repositoryLayout>default</repositoryLayout>
-              <groupId>com.sun</groupId>
-              <artifactId>tools</artifactId>
-              <version>jdk1.8.0</version>
-              <packaging>jar</packaging>
-              <generatePom>true</generatePom>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.0.0</version>
         <executions>
@@ -44,20 +23,7 @@
       </plugin>
     </plugins>
   </build>
-  <profiles>
-    <profile>
-      <id>windows-profile</id>
-      <properties>
-        <toolsjar>${JAVA_HOME}/lib/tools.jar</toolsjar>
-      </properties>
-    </profile>
-    <profile>
-      <id>mac-profile</id>
-      <properties>
-        <toolsjar>${java.home}/../lib/tools.jar</toolsjar>
-      </properties>
-    </profile>
-  </profiles>
+  <!-- obsolete profiles removed -->
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -73,8 +39,8 @@
     </dependency>
   </dependencies>
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
   </properties>
 </project>
 

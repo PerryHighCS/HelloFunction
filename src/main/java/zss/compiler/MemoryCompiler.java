@@ -51,10 +51,11 @@ public class MemoryCompiler {
 
 		// specify options for compiler
 		List<String> options = new ArrayList<>();
-                options.addAll(
-                                Arrays.asList("-classpath", MemoryCompiler.class.getProtectionDomain().getCodeSource().getLocation()
-                                                + ":" + System.getProperty("java.class.path")));
-                options.addAll(Arrays.asList("--release", "8", "-nowarn"));
+		options.addAll(
+				Arrays.asList("-classpath", MemoryCompiler.class.getProtectionDomain().getCodeSource().getLocation()
+						+ ":" + System.getProperty("java.class.path")));
+                options.addAll(Arrays.asList("-17", "-nowarn"));
+
 
 		Writer out = new PrintWriter(System.out);
 		JavaCompiler.CompilationTask task = compiler.getTask(out, fileManager, diag, options, null, files);
