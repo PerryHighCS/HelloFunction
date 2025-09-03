@@ -108,7 +108,7 @@ public class JavaCodeCompiler {
         // Set the classpath and java version for the compiler
         options.addAll(Arrays.asList("-classpath",
                 classpath));
-        options.addAll(Arrays.asList("-17"));
+        options.addAll(Arrays.asList("--release", "17"));
 
         Writer out = new PrintWriter(System.out);
         
