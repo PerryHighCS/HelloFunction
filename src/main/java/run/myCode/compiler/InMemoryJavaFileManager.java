@@ -1,6 +1,8 @@
 package run.myCode.compiler;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;
@@ -12,11 +14,45 @@ import javax.tools.JavaFileManager.Location;
 public class InMemoryJavaFileManager extends ForwardingJavaFileManager {
 
     private final FromMemoryClassLoader xcl;
+    private final Map<String, JavaFileObject> sources = new HashMap<>();
+    private final Map<String, JavaFileObject> sourcePaths = new HashMap<>();
 
     @SuppressWarnings("unchecked")
     public InMemoryJavaFileManager(StandardJavaFileManager sjfm, FromMemoryClassLoader xcl) {
         super(sjfm);
         this.xcl = xcl;
+    }
+
+    public void addSource(JavaFileObject file) {
+        // Store by binary name derived from file name
+        String path = file.getName();
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        sourcePaths.put(path, file);
+        if (path.endsWith(".java")) {
+            String className = path.substring(0, path.length() - 5);
+            sources.put(className, file);
+        }
+    }
+
+    @Override
+    public JavaFileObject getJavaFileForInput(Location location, String className, JavaFileObject.Kind kind) throws IOException {
+        JavaFileObject file = sources.get(className);
+        if (file != null) {
+            return file;
+        }
+        return super.getJavaFileForInput(location, className, kind);
+    }
+
+    @Override
+    public FileObject getFileForInput(Location location, String packageName, String relativeName) throws IOException {
+        String path = packageName == null || packageName.isEmpty() ? relativeName : packageName + "/" + relativeName;
+        JavaFileObject file = sourcePaths.get(path);
+        if (file != null) {
+            return file;
+        }
+        return super.getFileForInput(location, packageName, relativeName);
     }
 
     @Override

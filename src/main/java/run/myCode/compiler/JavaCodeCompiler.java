@@ -62,6 +62,9 @@ public class JavaCodeCompiler {
         final StandardJavaFileManager stdfileManager = compiler.getStandardFileManager(diag, Locale.ENGLISH, null);
 
         InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(stdfileManager, classLoader);
+        for (JavaFileObject file : files) {
+            fileManager.addSource(file);
+        }
 
         // specify options for compiler
         if (options == null) {
@@ -97,7 +100,7 @@ public class JavaCodeCompiler {
         // Set the classpath and java version for the compiler
         options.addAll(Arrays.asList("-classpath",
                 classpath));
-        options.addAll(Arrays.asList("-1.8"));
+        options.addAll(Arrays.asList("--release", "8"));
 
         Writer out = new PrintWriter(System.out);
         

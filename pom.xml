@@ -8,17 +8,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-    <repositories>
-        <repository>
-            <id>cagatay-gurturk</id>
-            <url>http://maven.cagataygurturk.com/releases</url>
-        </repository>
-<!--        <repository>
-            <id>repo.eclipse.org</id>
-            <name>Eclipse Repository - Releases</name>
-            <url>https://repo.eclipse.org/content/repositories/eclipse-staging/</url>
-        </repository>-->
-    </repositories>
+
     <profiles>
         <profile>
             <id>windows-profile</id>
@@ -96,8 +86,8 @@
         <dependency>
             <groupId>org.eclipse.jdt</groupId>
             <artifactId>ecj</artifactId>
-            <version>(,3.13.0]</version> <!-- version 3.13.50 is missing a dep, >= 3.13.100 looks for files on drive and not in memory -->
-                                         <!-- see: https://bugs.eclipse.org/bugs/show_bug.cgi?id=541269 -->
+            <version>3.42.0</version>
+            <!-- Updated to latest ECJ; in-memory compilation bug fixed in recent releases -->
         </dependency>
         
         <dependency>

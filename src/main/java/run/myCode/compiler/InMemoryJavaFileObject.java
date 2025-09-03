@@ -1,7 +1,10 @@
 package run.myCode.compiler;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
 import javax.tools.SimpleJavaFileObject;
 
@@ -24,7 +27,7 @@ public class InMemoryJavaFileObject extends SimpleJavaFileObject {
     public InMemoryJavaFileObject(String fileName, String contents) {
         // Create a file object with a classname instead of a filename by
         // removing the file's extension and convert the . separators into slashes
-        super(URI.create("file:///" + fileName), Kind.SOURCE);
+        super(URI.create("string:///" + fileName), Kind.SOURCE);
 
         // Save the file's contents
         this.contents = contents;
@@ -33,6 +36,11 @@ public class InMemoryJavaFileObject extends SimpleJavaFileObject {
     @Override
     public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
         return contents;
+    }
+
+    @Override
+    public InputStream openInputStream() throws IOException {
+        return new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8));
     }
 
     @Override
