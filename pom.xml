@@ -4,8 +4,9 @@
     <artifactId>hellofunction</artifactId>
     <version>6.0.1</version>
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <repositories>
@@ -19,32 +20,7 @@
             <url>https://repo.eclipse.org/content/repositories/eclipse-staging/</url>
         </repository>-->
     </repositories>
-    <profiles>
-        <profile>
-            <id>windows-profile</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-                <file>
-                    <exists>${JAVA_HOME}/lib/tools.jar</exists>
-                </file>
-            </activation>
-            <properties>
-                <toolsjar>${JAVA_HOME}/lib/tools.jar</toolsjar>
-            </properties>
-        </profile>
-        <profile>
-            <id>mac-profile</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-                <file>
-                    <exists>${java.home}/../lib/tools.jar</exists>
-                </file>
-            </activation>
-            <properties>
-                <toolsjar>${java.home}/../lib/tools.jar</toolsjar>
-            </properties>
-        </profile>
-    </profiles>
+    <!-- legacy profiles for tools.jar removed for Java 17 -->
 
     <dependencyManagement>
         <dependencies>
@@ -96,8 +72,7 @@
         <dependency>
             <groupId>org.eclipse.jdt</groupId>
             <artifactId>ecj</artifactId>
-            <version>(,3.13.0]</version> <!-- version 3.13.50 is missing a dep, >= 3.13.100 looks for files on drive and not in memory -->
-                                         <!-- see: https://bugs.eclipse.org/bugs/show_bug.cgi?id=541269 -->
+            <version>3.42.0</version>
         </dependency>
         
         <dependency>
