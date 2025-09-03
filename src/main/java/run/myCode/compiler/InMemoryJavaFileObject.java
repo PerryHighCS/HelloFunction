@@ -25,9 +25,14 @@ public class InMemoryJavaFileObject extends SimpleJavaFileObject {
      * @param contents the contents of the file as a single string object
      */
     public InMemoryJavaFileObject(String fileName, String contents) {
-        // Create a file object with a classname instead of a filename by
-        // removing the file's extension and convert the . separators into slashes
-        super(URI.create("string:///" + fileName), Kind.SOURCE);
+        // Use a custom URI scheme so the Eclipse compiler does not resolve the
+        // file on disk.  The URI's path is the provided filename which keeps
+        // the compiler from looking for a physical file like "/MyClass.java".
+        //
+        // Using a non-file scheme is important because ECJ will otherwise try
+        // to open the path returned by getName() from the filesystem which
+        // causes "File ... is missing" errors when compiling in memory.
+        super(URI.create("mem:///" + fileName), Kind.SOURCE);
 
         // Save the file's contents
         this.contents = contents;

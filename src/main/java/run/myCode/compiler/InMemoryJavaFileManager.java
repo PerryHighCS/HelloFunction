@@ -24,16 +24,36 @@ public class InMemoryJavaFileManager extends ForwardingJavaFileManager {
     }
 
     public void addSource(JavaFileObject file) {
-        // Store by binary name derived from file name
+        // The JavaFileObject#getName returns the URI path.  Normalise it so it
+        // can be looked up with or without a leading slash and use the path to
+        // derive the binary name for the class.
         String path = file.getName();
         if (path.startsWith("/")) {
             path = path.substring(1);
         }
         sourcePaths.put(path, file);
         if (path.endsWith(".java")) {
-            String className = path.substring(0, path.length() - 5);
+            String className = path.substring(0, path.length() - 5)
+                                  .replace('/', '.');
             sources.put(className, file);
+
+            // Also record the expected package path (e.g. foo/Bar.java) so
+            // lookups using package-qualified names can be resolved.
+            String pkgPath = className.replace('.', '/') + ".java";
+            sourcePaths.put(pkgPath, file);
         }
+    }
+
+    @Override
+    public String inferBinaryName(Location location, JavaFileObject file) {
+        String name = file.getName();
+        if (name.startsWith("/")) {
+            name = name.substring(1);
+        }
+        if (name.endsWith(".java")) {
+            name = name.substring(0, name.length() - 5);
+        }
+        return name.replace('/', '.');
     }
 
     @Override
