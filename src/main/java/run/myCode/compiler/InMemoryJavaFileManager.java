@@ -13,6 +13,8 @@ import javax.tools.JavaFileManager.Location;
 @SuppressWarnings({"unused", "rawtypes"})
 public class InMemoryJavaFileManager extends ForwardingJavaFileManager {
 
+    private static final boolean DEBUG = Boolean.getBoolean("run.mycode.debug");
+
     private final FromMemoryClassLoader xcl;
     private final Map<String, JavaFileObject> sources = new HashMap<>();
     private final Map<String, JavaFileObject> sourcePaths = new HashMap<>();
@@ -41,6 +43,10 @@ public class InMemoryJavaFileManager extends ForwardingJavaFileManager {
             // lookups using package-qualified names can be resolved.
             String pkgPath = className.replace('.', '/') + ".java";
             sourcePaths.put(pkgPath, file);
+
+            if (DEBUG) {
+                System.out.println("Registered source " + file.getName());
+            }
         }
     }
 
@@ -63,6 +69,9 @@ public class InMemoryJavaFileManager extends ForwardingJavaFileManager {
             name = name.substring(1);
         }
         JavaFileObject file = sources.get(name);
+        if (DEBUG) {
+            System.out.println("getJavaFileForInput(" + className + ") -> " + (file != null ? "memory" : "disk"));
+        }
         if (file != null) {
             return file;
         }
@@ -76,6 +85,9 @@ public class InMemoryJavaFileManager extends ForwardingJavaFileManager {
             path = path.substring(1);
         }
         JavaFileObject file = sourcePaths.get(path);
+        if (DEBUG) {
+            System.out.println("getFileForInput(" + path + ") -> " + (file != null ? "memory" : "disk"));
+        }
         if (file != null) {
             return file;
         }
@@ -86,6 +98,9 @@ public class InMemoryJavaFileManager extends ForwardingJavaFileManager {
     public JavaFileObject getJavaFileForOutput(Location location, String name, JavaFileObject.Kind kind, FileObject sibling) throws IOException {
         MemoryByteCode mbc = new MemoryByteCode(name);
         xcl.addClass(name, mbc);
+        if (DEBUG) {
+            System.out.println("Storing compiled class " + name);
+        }
         return mbc;
     }
 

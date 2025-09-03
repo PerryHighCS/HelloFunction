@@ -21,6 +21,8 @@ import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
 
 public class JavaCodeCompiler {
 
+    private static final boolean DEBUG = Boolean.getBoolean("run.mycode.debug");
+
     /**
      * Compile Java source files into memory
      *
@@ -64,6 +66,9 @@ public class JavaCodeCompiler {
         InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(stdfileManager, classLoader);
         for (JavaFileObject file : files) {
             fileManager.addSource(file);
+            if (DEBUG) {
+                System.out.println("Compiling source " + file.getName());
+            }
         }
 
         // specify options for compiler
@@ -106,6 +111,9 @@ public class JavaCodeCompiler {
         
         // Compile the code
         JavaCompiler.CompilationTask task = compiler.getTask(out, fileManager, diag, options, null, files);
+        if (DEBUG) {
+            System.out.println("Starting compilation with mem URIs");
+        }
         boolean result = task.call();
                 
         // Return the classloader containing the compiled classes

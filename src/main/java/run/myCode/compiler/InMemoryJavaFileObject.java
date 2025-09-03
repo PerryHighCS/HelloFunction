@@ -16,6 +16,8 @@ import javax.tools.JavaFileObject.Kind;
  */
 public class InMemoryJavaFileObject extends SimpleJavaFileObject {
 
+    private static final boolean DEBUG = Boolean.getBoolean("run.mycode.debug");
+
     private String contents = null;
 
     /**
@@ -36,6 +38,10 @@ public class InMemoryJavaFileObject extends SimpleJavaFileObject {
 
         // Save the file's contents
         this.contents = contents;
+
+        if (DEBUG) {
+            System.out.println("Created in-memory source " + toUri());
+        }
     }
 
     @Override
@@ -45,6 +51,9 @@ public class InMemoryJavaFileObject extends SimpleJavaFileObject {
 
     @Override
     public InputStream openInputStream() throws IOException {
+        if (DEBUG) {
+            System.out.println("Opening in-memory source " + getName());
+        }
         return new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8));
     }
 
