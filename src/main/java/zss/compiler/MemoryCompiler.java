@@ -12,11 +12,12 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 
-import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
+import javax.tools.ToolProvider;
 
 /**
- * An instance of the Eclipse Compiler for Java that compiles memory files into
- * memory byte code
+ * Compiles in-memory source files into byte code using the standard JDK
+ * compiler. This avoids relying on the Eclipse compiler which attempted to
+ * resolve sources on disk.
  */
 public class MemoryCompiler {
 	/**
@@ -36,8 +37,10 @@ public class MemoryCompiler {
 		// classloader
 		final FromMemoryClassLoader classLoader = new FromMemoryClassLoader(urlcl);
 
-		// get system compiler:
-		final JavaCompiler compiler = new EclipseCompiler();
+                // Use the standard JDK compiler to avoid ECJ attempting to read
+                // temporary files from disk which caused "File ... is missing"
+                // errors when compiling in memory.
+                final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
 		// create a diagnostic listener for compilation diagnostic message processing on
 		// compilation WARNING/ERROR
@@ -52,6 +55,7 @@ public class MemoryCompiler {
 				Arrays.asList("-classpath", MemoryCompiler.class.getProtectionDomain().getCodeSource().getLocation()
 						+ ":" + System.getProperty("java.class.path")));
                 options.addAll(Arrays.asList("-17", "-nowarn"));
+
 
 		Writer out = new PrintWriter(System.out);
 		JavaCompiler.CompilationTask task = compiler.getTask(out, fileManager, diag, options, null, files);

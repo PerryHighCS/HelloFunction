@@ -1,7 +1,10 @@
 package run.myCode.compiler;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
 import javax.tools.SimpleJavaFileObject;
 
@@ -13,6 +16,8 @@ import javax.tools.JavaFileObject.Kind;
  */
 public class InMemoryJavaFileObject extends SimpleJavaFileObject {
 
+    private static final boolean DEBUG = Boolean.getBoolean("run.mycode.debug");
+
     private String contents = null;
 
     /**
@@ -22,17 +27,38 @@ public class InMemoryJavaFileObject extends SimpleJavaFileObject {
      * @param contents the contents of the file as a single string object
      */
     public InMemoryJavaFileObject(String fileName, String contents) {
-        // Create a file object with a classname instead of a filename by
-        // removing the file's extension and convert the . separators into slashes
-        super(URI.create("file:///" + fileName), Kind.SOURCE);
+        // Use a custom URI scheme so the Eclipse compiler does not resolve the
+        // file on disk.  The URI's path is the provided filename which keeps
+        // the compiler from looking for a physical file like "/MyClass.java".
+        //
+        // Using a non-file scheme is important because ECJ will otherwise try
+        // to open the path returned by getName() from the filesystem which
+        // causes "File ... is missing" errors when compiling in memory.
+        // Use the "string" URI scheme which the Eclipse compiler treats as an
+        // in-memory source and therefore does not attempt to resolve on the
+        // filesystem.  Any other scheme will cause ECJ to verify the file on
+        // disk and emit a "File ... is missing" error.
+        super(URI.create("string:///" + fileName), Kind.SOURCE);
 
         // Save the file's contents
         this.contents = contents;
+
+        if (DEBUG) {
+            System.out.println("Created in-memory source " + toUri());
+        }
     }
 
     @Override
     public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
         return contents;
+    }
+
+    @Override
+    public InputStream openInputStream() throws IOException {
+        if (DEBUG) {
+            System.out.println("Opening in-memory source " + getName());
+        }
+        return new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8));
     }
 
     @Override

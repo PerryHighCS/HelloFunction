@@ -7,6 +7,8 @@ import java.util.Map;
 
 public class FromMemoryClassLoader extends ClassLoader {
 
+    private static final boolean DEBUG = Boolean.getBoolean("run.mycode.debug");
+
     private final Map<String, MemoryByteCode> m = new HashMap<>();
     private final ClassLoader parent;
 
@@ -25,6 +27,9 @@ public class FromMemoryClassLoader extends ClassLoader {
                 if (mbc == null) {
                     return super.findClass(name);
                 }
+            }
+            if (DEBUG) {
+                System.out.println("Loading in-memory class " + name);
             }
             return defineClass(name, mbc.getBytes(), 0, mbc.getBytes().length);
         } catch (ClassNotFoundException e) {
@@ -47,6 +52,9 @@ public class FromMemoryClassLoader extends ClassLoader {
         // System.err.println("Added class: " + name);
         // System.out.println("Added class:" + name);
         m.put(name, mbc);
+        if (DEBUG) {
+            System.out.println("Added in-memory class " + name);
+        }
     }
     
     public List<String> getClassNames() {

@@ -7,6 +7,8 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import run.myCode.compiler.InMemoryJavaFileObject;
 
 /**
@@ -32,8 +34,20 @@ public class FileManager {
                 contents += s + '\n';
             }
 
+            String fileName = f.getName();
+            // If the source declares a package, prefix the file name with its
+            // package path so the compiler's file manager can resolve the
+            // class correctly.  ECJ expects the source path to mirror the
+            // package declaration, otherwise it will try to locate the file on
+            // disk and fail with "File ... is missing".
+            Pattern pkgPattern = Pattern.compile("(?m)^\\s*package\\s+([\\w\\.]+)\\s*;");
+            Matcher m = pkgPattern.matcher(contents);
+            if (m.find()) {
+                fileName = m.group(1).replace('.', '/') + "/" + fileName;
+            }
+
             // Add them to a list of files
-            objects.add(new InMemoryJavaFileObject(f.getName(), contents));
+            objects.add(new InMemoryJavaFileObject(fileName, contents));
         });
         return objects;
     }

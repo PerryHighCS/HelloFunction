@@ -17,9 +17,11 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 
-import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
+import javax.tools.ToolProvider;
 
 public class JavaCodeCompiler {
+
+    private static final boolean DEBUG = Boolean.getBoolean("run.mycode.debug");
 
     /**
      * Compile Java source files into memory
@@ -54,7 +56,10 @@ public class JavaCodeCompiler {
 
         final FromMemoryClassLoader classLoader = new FromMemoryClassLoader(urlcl);
         // get system compiler:
-        final JavaCompiler compiler = new EclipseCompiler();
+        // Use the standard Java compiler provided by the JDK.  This avoids ECJ
+        // attempting to resolve in-memory sources on disk which resulted in
+        // "File ... is missing" errors during tests.
+        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
         // create a diagnostic listener for compilation diagnostic message processing on
         // compilation WARNING/ERROR
@@ -62,6 +67,12 @@ public class JavaCodeCompiler {
         final StandardJavaFileManager stdfileManager = compiler.getStandardFileManager(diag, Locale.ENGLISH, null);
 
         InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(stdfileManager, classLoader);
+        for (JavaFileObject file : files) {
+            fileManager.addSource(file);
+            if (DEBUG) {
+                System.out.println("Compiling source " + file.getName());
+            }
+        }
 
         // specify options for compiler
         if (options == null) {
@@ -69,10 +80,10 @@ public class JavaCodeCompiler {
         }
 
         // Build the classpath from the current folder and the system classpath
-        StringBuilder classpathBuilder = 
-                new StringBuilder("." 
-                    + System.getProperty("path.separator") 
-                    + System.getProperty("java.class.path"));
+        StringBuilder classpathBuilder =
+                new StringBuilder("." +
+                    System.getProperty("path.separator") +
+                    System.getProperty("java.class.path"));
 
         // Add any included jar files from the lib folder to the classpath (wildcard isn't working)
         try {
@@ -103,6 +114,9 @@ public class JavaCodeCompiler {
         
         // Compile the code
         JavaCompiler.CompilationTask task = compiler.getTask(out, fileManager, diag, options, null, files);
+        if (DEBUG) {
+            System.out.println("Starting compilation with mem URIs");
+        }
         boolean result = task.call();
                 
         // Return the classloader containing the compiled classes
