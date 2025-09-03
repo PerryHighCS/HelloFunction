@@ -33,7 +33,11 @@ public class InMemoryJavaFileManager extends ForwardingJavaFileManager {
         if (path.startsWith("/")) {
             path = path.substring(1);
         }
+        // Track both the plain path and the full URI so lookups using either
+        // form can be resolved (e.g. "Calculator.java" vs "mem:///Calculator.java").
         sourcePaths.put(path, file);
+        sourcePaths.put(file.toUri().toString(), file);
+
         if (path.endsWith(".java")) {
             String className = path.substring(0, path.length() - 5)
                                   .replace('/', '.');
@@ -68,6 +72,13 @@ public class InMemoryJavaFileManager extends ForwardingJavaFileManager {
         if (name.startsWith("/")) {
             name = name.substring(1);
         }
+        if (name.startsWith("mem:///")) {
+            name = name.substring("mem:///".length());
+        }
+        if (name.endsWith(".java")) {
+            name = name.substring(0, name.length() - 5);
+        }
+        name = name.replace('/', '.');
         JavaFileObject file = sources.get(name);
         if (DEBUG) {
             System.out.println("getJavaFileForInput(" + className + ") -> " + (file != null ? "memory" : "disk"));
@@ -83,6 +94,9 @@ public class InMemoryJavaFileManager extends ForwardingJavaFileManager {
         String path = packageName == null || packageName.isEmpty() ? relativeName : packageName + "/" + relativeName;
         if (path.startsWith("/")) {
             path = path.substring(1);
+        }
+        if (path.startsWith("mem:///")) {
+            path = path.substring("mem:///".length());
         }
         JavaFileObject file = sourcePaths.get(path);
         if (DEBUG) {
