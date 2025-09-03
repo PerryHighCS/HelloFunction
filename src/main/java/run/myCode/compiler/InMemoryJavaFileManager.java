@@ -38,7 +38,11 @@ public class InMemoryJavaFileManager extends ForwardingJavaFileManager {
 
     @Override
     public JavaFileObject getJavaFileForInput(Location location, String className, JavaFileObject.Kind kind) throws IOException {
-        JavaFileObject file = sources.get(className);
+        String name = className;
+        if (name.startsWith("/")) {
+            name = name.substring(1);
+        }
+        JavaFileObject file = sources.get(name);
         if (file != null) {
             return file;
         }
@@ -48,6 +52,9 @@ public class InMemoryJavaFileManager extends ForwardingJavaFileManager {
     @Override
     public FileObject getFileForInput(Location location, String packageName, String relativeName) throws IOException {
         String path = packageName == null || packageName.isEmpty() ? relativeName : packageName + "/" + relativeName;
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
         JavaFileObject file = sourcePaths.get(path);
         if (file != null) {
             return file;
