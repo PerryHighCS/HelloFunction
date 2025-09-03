@@ -17,7 +17,7 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 
-import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler;
+import javax.tools.ToolProvider;
 
 public class JavaCodeCompiler {
 
@@ -56,7 +56,10 @@ public class JavaCodeCompiler {
 
         final FromMemoryClassLoader classLoader = new FromMemoryClassLoader(urlcl);
         // get system compiler:
-        final JavaCompiler compiler = new EclipseCompiler();
+        // Use the standard Java compiler provided by the JDK.  This avoids ECJ
+        // attempting to resolve in-memory sources on disk which resulted in
+        // "File ... is missing" errors during tests.
+        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
         // create a diagnostic listener for compilation diagnostic message processing on
         // compilation WARNING/ERROR
@@ -77,10 +80,10 @@ public class JavaCodeCompiler {
         }
 
         // Build the classpath from the current folder and the system classpath
-        StringBuilder classpathBuilder = 
-                new StringBuilder("." 
-                    + System.getProperty("path.separator") 
-                    + System.getProperty("java.class.path"));
+        StringBuilder classpathBuilder =
+                new StringBuilder("." +
+                    System.getProperty("path.separator") +
+                    System.getProperty("java.class.path"));
 
         // Add any included jar files from the lib folder to the classpath (wildcard isn't working)
         try {

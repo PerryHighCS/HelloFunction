@@ -1,7 +1,10 @@
 package zss.compiler;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
 import javax.tools.SimpleJavaFileObject;
 
@@ -21,12 +24,13 @@ public class InMemoryJavaFileObject extends SimpleJavaFileObject {
      *
      * @param fileName the name of the file, with extension
      * @param contents the contents of the file as a single string object
-     * @throws Exception
      */
     public InMemoryJavaFileObject(String fileName, String contents) {
-        // Create a file object with a classname instead of a filename by
-        // removing the file's extension and convert the . separators into slashes
-        super(URI.create("file:///" + fileName), Kind.SOURCE);
+        // Use the "string" URI scheme so the compiler treats this source as an
+        // in-memory file and does not attempt to resolve it on disk. Using the
+        // "file" scheme caused ECJ to look for a physical file and fail with
+        // "File ... is missing" errors.
+        super(URI.create("string:///" + fileName), Kind.SOURCE);
 
         // Save the file's contents
         this.contents = contents;
@@ -37,6 +41,12 @@ public class InMemoryJavaFileObject extends SimpleJavaFileObject {
         return contents;
     }
 
+    @Override
+    public InputStream openInputStream() throws IOException {
+        return new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
     public String toString() {
         String s = this.getName() + ":\n";
         s += this.contents;

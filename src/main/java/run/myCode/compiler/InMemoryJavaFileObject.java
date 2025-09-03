@@ -34,7 +34,11 @@ public class InMemoryJavaFileObject extends SimpleJavaFileObject {
         // Using a non-file scheme is important because ECJ will otherwise try
         // to open the path returned by getName() from the filesystem which
         // causes "File ... is missing" errors when compiling in memory.
-        super(URI.create("mem:///" + fileName), Kind.SOURCE);
+        // Use the "string" URI scheme which the Eclipse compiler treats as an
+        // in-memory source and therefore does not attempt to resolve on the
+        // filesystem.  Any other scheme will cause ECJ to verify the file on
+        // disk and emit a "File ... is missing" error.
+        super(URI.create("string:///" + fileName), Kind.SOURCE);
 
         // Save the file's contents
         this.contents = contents;
@@ -55,15 +59,6 @@ public class InMemoryJavaFileObject extends SimpleJavaFileObject {
             System.out.println("Opening in-memory source " + getName());
         }
         return new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8));
-    }
-
-    @Override
-    public String getName() {
-        String path = toUri().getPath();
-        if (path.startsWith("/")) {
-            return path.substring(1);
-        }
-        return path;
     }
 
     @Override
