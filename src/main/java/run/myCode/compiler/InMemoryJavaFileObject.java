@@ -58,6 +58,15 @@ public class InMemoryJavaFileObject extends SimpleJavaFileObject {
     }
 
     @Override
+    public String getName() {
+        String path = toUri().getPath();
+        if (path.startsWith("/")) {
+            return path.substring(1);
+        }
+        return path;
+    }
+
+    @Override
     public String toString() {
         String s = this.getName() + ":\n";
         s += this.contents;
