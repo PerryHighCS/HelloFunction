@@ -1,0 +1,21 @@
+{
+"body": {
+  "compile": {
+    "mainClass": "Broken",
+    "sourceFiles": [{
+      "name": "Broken.java",
+      "contents": [
+        "public class Broken {",
+        "  public static void main(String[] args) {",
+        "    System.out.println(\"hi\")",
+        "  }",
+        "}"
+      ]
+    }]
+  },
+  "test-type": "run"
+},
+"params": {},
+"context": {},
+"stage-variables": {}
+}

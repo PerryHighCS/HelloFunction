@@ -60,10 +60,15 @@ public class MemoryCompiler {
 		Writer out = new PrintWriter(System.out);
 		JavaCompiler.CompilationTask task = compiler.getTask(out, fileManager, diag, options, null, files);
 
-		Boolean result = task.call();
-		if (result == true) {
-			return classLoader;
-		}
-		return null;
-	}
+                Boolean result = task.call();
+                if (Boolean.TRUE.equals(result)) {
+                        return classLoader;
+                }
+
+                for (String msg : diag.getFormattedDiagnostics()) {
+                        System.out.println(msg);
+                        System.out.println();
+                }
+                return null;
+        }
 }

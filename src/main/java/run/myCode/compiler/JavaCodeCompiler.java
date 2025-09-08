@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
-
 import javax.tools.ToolProvider;
 
 public class JavaCodeCompiler {
@@ -118,7 +117,15 @@ public class JavaCodeCompiler {
             System.out.println("Starting compilation with mem URIs");
         }
         boolean result = task.call();
-                
+
+        if (!result) {
+            for (String msg : diag.getFormattedDiagnostics()) {
+                System.out.println(msg);
+                System.out.println();
+            }
+            throw new ClassNotFoundException("Compilation failed");
+        }
+
         // Return the classloader containing the compiled classes
         return classLoader;
     }
