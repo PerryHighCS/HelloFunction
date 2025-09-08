@@ -32,11 +32,18 @@ public class HelloFailureTest {
 
         assertFalse("Compiler returned no response", resp == null);
         assertFalse("Compilation unexpectedly succeeded", resp.getSucceeded());
-        assertTrue("Missing file/line in diagnostics", resp.getResult().contains("Broken.java:3"));
-        assertTrue("Missing caret in diagnostics", resp.getResult().contains("^"));
-        assertTrue("Missing source line", resp.getResult().contains("System.out.println(\"hi\")"));
+        String diag = resp.getResult();
+        assertTrue("Missing source line", diag.contains("System.out.println(\"hi\")"));
+        assertTrue("Missing caret in diagnostics", diag.contains("^"));
+        assertTrue("Missing file/line in diagnostics", diag.contains("Broken.java:3"));
 
-        System.out.println("Result: " + resp.getResult());
+        int lineIdx = diag.indexOf("System.out.println(\"hi\")");
+        int caretIdx = diag.indexOf("^");
+        int fileIdx = diag.indexOf("Broken.java:3");
+        assertTrue("Caret should follow source line", lineIdx >= 0 && caretIdx > lineIdx);
+        assertTrue("File info should follow caret", fileIdx > caretIdx);
+
+        System.out.println("Result: " + diag);
     }
 
     private CompileResponse doTest(String resourceName) {

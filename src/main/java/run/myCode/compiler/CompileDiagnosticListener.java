@@ -50,10 +50,8 @@ public class CompileDiagnosticListener implements DiagnosticListener<JavaFileObj
         StringBuilder sb = new StringBuilder();
         String sourceName = d.getSource() == null ? "Unknown Source"
                 : new File(d.getSource().getName()).getName();
-        sb.append(sourceName).append(':').append(d.getLineNumber()).append(':')
-                .append(' ').append(d.getKind().toString().toLowerCase(Locale.ENGLISH))
-                .append(':').append(' ').append(d.getMessage(Locale.ENGLISH));
 
+        boolean appendedSource = false;
         try {
             if (d.getSource() != null) {
                 CharSequence content = d.getSource().getCharContent(true);
@@ -61,8 +59,7 @@ public class CompileDiagnosticListener implements DiagnosticListener<JavaFileObj
                 long lineNo = d.getLineNumber();
                 if (lineNo > 0 && lineNo <= lines.length) {
                     String line = lines[(int) lineNo - 1];
-                    sb.append(System.lineSeparator()).append(line)
-                            .append(System.lineSeparator());
+                    sb.append(line).append(System.lineSeparator());
                     long col = d.getColumnNumber();
                     if (col > 0) {
                         for (int i = 1; i < col; i++) {
@@ -70,11 +67,21 @@ public class CompileDiagnosticListener implements DiagnosticListener<JavaFileObj
                         }
                         sb.append('^');
                     }
+                    sb.append(System.lineSeparator());
+                    appendedSource = true;
                 }
             }
         } catch (IOException e) {
             // ignore - if we can't read the source, just return the basic message
         }
+
+        if (!appendedSource && sb.length() > 0) {
+            sb.append(System.lineSeparator());
+        }
+
+        sb.append(sourceName).append(':').append(d.getLineNumber()).append(':')
+                .append(' ').append(d.getKind().toString().toLowerCase(Locale.ENGLISH))
+                .append(':').append(' ').append(d.getMessage(Locale.ENGLISH));
 
         return sb.toString();
     }
