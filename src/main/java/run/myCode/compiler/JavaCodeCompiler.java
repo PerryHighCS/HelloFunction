@@ -13,6 +13,7 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.tools.Diagnostic;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -118,7 +119,17 @@ public class JavaCodeCompiler {
             System.out.println("Starting compilation with mem URIs");
         }
         boolean result = task.call();
-                
+
+        if (!result) {
+            for (Diagnostic<? extends JavaFileObject> d : diag.getDiagnostics()) {
+                System.out.println("Line Number->" + d.getLineNumber());
+                System.out.println("Message->" + d.getMessage(Locale.ENGLISH));
+                System.out.println("Source->" + d.getSource());
+                System.out.println();
+            }
+            throw new ClassNotFoundException("Compilation failed");
+        }
+
         // Return the classloader containing the compiled classes
         return classLoader;
     }

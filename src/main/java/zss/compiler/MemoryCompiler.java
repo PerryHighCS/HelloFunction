@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import javax.tools.Diagnostic;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -60,10 +61,17 @@ public class MemoryCompiler {
 		Writer out = new PrintWriter(System.out);
 		JavaCompiler.CompilationTask task = compiler.getTask(out, fileManager, diag, options, null, files);
 
-		Boolean result = task.call();
-		if (result == true) {
-			return classLoader;
-		}
-		return null;
-	}
+                Boolean result = task.call();
+                if (Boolean.TRUE.equals(result)) {
+                        return classLoader;
+                }
+
+                for (Diagnostic<? extends JavaFileObject> d : diag.getDiagnostics()) {
+                        System.out.println("Line Number->" + d.getLineNumber());
+                        System.out.println("Message->" + d.getMessage(Locale.ENGLISH));
+                        System.out.println("Source->" + d.getSource());
+                        System.out.println();
+                }
+                return null;
+        }
 }
