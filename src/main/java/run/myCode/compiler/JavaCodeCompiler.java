@@ -13,11 +13,9 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.tools.Diagnostic;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
-
 import javax.tools.ToolProvider;
 
 public class JavaCodeCompiler {
@@ -121,10 +119,8 @@ public class JavaCodeCompiler {
         boolean result = task.call();
 
         if (!result) {
-            for (Diagnostic<? extends JavaFileObject> d : diag.getDiagnostics()) {
-                System.out.println("Line Number->" + d.getLineNumber());
-                System.out.println("Message->" + d.getMessage(Locale.ENGLISH));
-                System.out.println("Source->" + d.getSource());
+            for (String msg : diag.getFormattedDiagnostics()) {
+                System.out.println(msg);
                 System.out.println();
             }
             throw new ClassNotFoundException("Compilation failed");

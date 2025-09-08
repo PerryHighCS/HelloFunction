@@ -32,8 +32,9 @@ public class HelloFailureTest {
 
         assertFalse("Compiler returned no response", resp == null);
         assertFalse("Compilation unexpectedly succeeded", resp.getSucceeded());
-        assertTrue("Missing line number in diagnostics", resp.getResult().contains("Line Number"));
-        assertTrue("Missing message in diagnostics", resp.getResult().contains("Message->"));
+        assertTrue("Missing file/line in diagnostics", resp.getResult().contains("Broken.java:3"));
+        assertTrue("Missing caret in diagnostics", resp.getResult().contains("^"));
+        assertTrue("Missing source line", resp.getResult().contains("System.out.println(\"hi\")"));
 
         System.out.println("Result: " + resp.getResult());
     }

@@ -1,7 +1,10 @@
 package run.myCode.compiler;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -27,5 +30,52 @@ public class CompileDiagnosticListener implements DiagnosticListener<JavaFileObj
      */
     public List<Diagnostic<? extends JavaFileObject>> getDiagnostics() {
         return diagnostics;
+    }
+
+    /**
+     * Format collected diagnostics into human readable messages that include the
+     * source line and a caret pointing to the error column when available.
+     *
+     * @return list of formatted diagnostic strings
+     */
+    public List<String> getFormattedDiagnostics() {
+        List<String> messages = new ArrayList<>();
+        for (Diagnostic<? extends JavaFileObject> d : diagnostics) {
+            messages.add(formatDiagnostic(d));
+        }
+        return messages;
+    }
+
+    private String formatDiagnostic(Diagnostic<? extends JavaFileObject> d) {
+        StringBuilder sb = new StringBuilder();
+        String sourceName = d.getSource() == null ? "Unknown Source"
+                : new File(d.getSource().getName()).getName();
+        sb.append(sourceName).append(':').append(d.getLineNumber()).append(':')
+                .append(' ').append(d.getKind().toString().toLowerCase(Locale.ENGLISH))
+                .append(':').append(' ').append(d.getMessage(Locale.ENGLISH));
+
+        try {
+            if (d.getSource() != null) {
+                CharSequence content = d.getSource().getCharContent(true);
+                String[] lines = content.toString().split("\r?\n");
+                long lineNo = d.getLineNumber();
+                if (lineNo > 0 && lineNo <= lines.length) {
+                    String line = lines[(int) lineNo - 1];
+                    sb.append(System.lineSeparator()).append(line)
+                            .append(System.lineSeparator());
+                    long col = d.getColumnNumber();
+                    if (col > 0) {
+                        for (int i = 1; i < col; i++) {
+                            sb.append(' ');
+                        }
+                        sb.append('^');
+                    }
+                }
+            }
+        } catch (IOException e) {
+            // ignore - if we can't read the source, just return the basic message
+        }
+
+        return sb.toString();
     }
 }

@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import javax.tools.Diagnostic;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -66,10 +65,8 @@ public class MemoryCompiler {
                         return classLoader;
                 }
 
-                for (Diagnostic<? extends JavaFileObject> d : diag.getDiagnostics()) {
-                        System.out.println("Line Number->" + d.getLineNumber());
-                        System.out.println("Message->" + d.getMessage(Locale.ENGLISH));
-                        System.out.println("Source->" + d.getSource());
+                for (String msg : diag.getFormattedDiagnostics()) {
+                        System.out.println(msg);
                         System.out.println();
                 }
                 return null;
