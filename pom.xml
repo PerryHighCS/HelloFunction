@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>run.mycode</groupId>
     <artifactId>hellofunction</artifactId>
-    <version>6.0.1</version>
+    <version>6.0.3</version>
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
